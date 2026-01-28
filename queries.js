@@ -4,8 +4,10 @@ export async function getSongs() {
     const data = await res.json();
     
     const  songs  = Object.values(data.files.S.MP3)
+    const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
     const dataSongs = []
-    songs.forEach(element => {
+    normalSongs.forEach(element => {
+     /*  console.log(element.title) */
       const songData =  {
          id: element.docid,
         title: element.title,
@@ -20,3 +22,4 @@ export async function getSongs() {
     throw err;
   }
 }
+
