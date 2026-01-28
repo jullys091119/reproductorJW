@@ -1,0 +1,8 @@
+.navList {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+}
+.containerNav {
+    padding:30px  20px;
+}

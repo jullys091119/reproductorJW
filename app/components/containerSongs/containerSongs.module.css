@@ -1,0 +1,32 @@
+.cardContainerSongs {
+    background-color: #0d0d0f;
+    overflow-y: auto;
+    max-height: 470px;
+    color: white;
+}
+
+.cardSongContainer {
+    background-color: #1c1c1e;
+    padding: 10px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.containerImage {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.colorTitle {
+    color: #ffffff;
+}
+
+.avatarSong {
+    border-radius: 100%;
+    width: 40px;
+    height: 40px;
+}

@@ -1,0 +1,22 @@
+.card {
+  overflow-x: auto;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: row;
+}
+
+.card::-webkit-scrollbar {
+  display: none;
+}
+
+.containerAlbumName {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.albumName {
+  width: 100%;
+  white-space: normal;
+  font-size: 13px;
+  text-align: center;
+}

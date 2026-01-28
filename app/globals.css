@@ -1,5 +1,6 @@
 @import "tailwindcss";
-
+@import "tailwindcss";
+@import "@heroui/styles"; 
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -27,4 +28,8 @@ body {
 
 .container {
   height: 100vh;
+  padding: 10px;
+  background-color: #060508  !important;
+  color: rgb(238, 231, 231);
+  overflow-y: auto;
 }
