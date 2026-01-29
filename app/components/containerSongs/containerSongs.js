@@ -1,18 +1,20 @@
 "use client"
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import { Card } from '@heroui/react';
 import styles from "./containerSongs.module.css"
 import Image from 'next/image';
-import portadaCantemos from "../../portadas/cantadas.jpg"
 import { CirclePauseFill, CirclePlayFill } from '@gravity-ui/icons';
 
 
-export function ContainerSongs({ data }) {
+
+export function ContainerSongs({ data, img, resetKey }) {
   const [currentSong, setCurrentSong] = useState("")
   const [selected, setSelected] = useState(null)
   const [isPaused, setIsPaused] = useState(false);
 
   const audioRef = useRef();
+
+  
 
   const playSong = async (file, id) => {
     setCurrentSong(file)
@@ -23,7 +25,7 @@ export function ContainerSongs({ data }) {
   }
 
   const togglePause = (e) => {
-    e.stopPropagation(); // 🔥 para que NO dispare el click del contenedor
+    e.stopPropagation();
     setIsPaused((prev) => !prev);
   };
 
@@ -42,6 +44,12 @@ export function ContainerSongs({ data }) {
     if (isPaused) audioRef.current.pause();
     else audioRef.current.play();
   }, [isPaused]);
+
+  useEffect(() => {
+  setSelected(null)
+  setCurrentSong("")
+  setIsPaused(false)
+}, [resetKey])
 
   const RenderAudio = ({ link }) => {
     return (
@@ -63,11 +71,15 @@ export function ContainerSongs({ data }) {
           const seconds = Math.round(item.duration % 60)
           const colored = selected === item.id
           return (
-            <Card.Header key={item.id}>
-              <div className={styles.cardSongContainer} onClick={() => playSong(item.file, item.id)} style={{ backgroundColor: `${colored ? "#9B3E82" : "transparent"}` }}>
+            <Card.Header key={`${item.title}-${item.id}`}>
+              <div className={styles.cardSongContainer} onClick={() => playSong(item.file, item.id)} style={{
+                backgroundColor: colored
+                  ? "#9B3E82"
+                  : "#292424"
+              }}>
                 <div className={styles.containerImage}>
                   <Image
-                    src={portadaCantemos}
+                    src={img}
                     className={styles.avatarSong}
                     alt='img'
                   />
@@ -75,11 +87,12 @@ export function ContainerSongs({ data }) {
                 </div>
                 {colored ? (
                   isPaused ? (
-                    <CirclePlayFill onClick={togglePause} />
+                    <CirclePauseFill onClick={(e) => togglePause(e)} />
+
                   ) : (
-                    <CirclePauseFill onClick={togglePause} />
+                    <CirclePlayFill onClick={(e) => togglePause(e)} />
                   )
-                ) : null}
+                ) : <p>{minutes} : {seconds}</p>}
               </div>
             </Card.Header>
 
