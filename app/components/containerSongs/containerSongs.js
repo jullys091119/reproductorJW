@@ -12,7 +12,6 @@ export function ContainerSongs({ data, img, resetKey }) {
 
   const audioRef = useRef(null);
 
-  // Carga y reproduce una canción
   const loadAndPlay = async (file, startTime = 0) => {
     if (!audioRef.current) return;
     audioRef.current.src = file;
@@ -24,7 +23,6 @@ export function ContainerSongs({ data, img, resetKey }) {
     } catch {}
   };
 
-  // Siguiente canción
   const nextSong = async () => {
     if (!data?.length) return;
     const nextIndex = (index + 1) % data.length;
@@ -35,31 +33,29 @@ export function ContainerSongs({ data, img, resetKey }) {
     await loadAndPlay(next.file);
   };
 
-  // Click en canción
   const handleSongClick = async (item, i) => {
     if (!audioRef.current) return;
 
     const isSameSong = selected === item.id;
 
-    if (!isSameSong) {
+    if (isSameSong) {
+      // Toggle play/pause
+      if (audioRef.current.paused) {
+        await audioRef.current.play();
+        setIsPaused(false);
+      } else {
+        audioRef.current.pause();
+        setIsPaused(true);
+      }
+    } else {
+      // Cambiar de canción
       setSelected(item.id);
       setIndex(i);
       await loadAndPlay(item.file);
-      return;
-    }
-
-    if (audioRef.current.paused) {
-      try {
-        await audioRef.current.play();
-        setIsPaused(false);
-      } catch {}
-    } else {
-      audioRef.current.pause();
-      setIsPaused(true);
     }
   };
 
-  // Guardar posición e índice cada segundo
+  // Guardar posición cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       if (audioRef.current && !audioRef.current.paused) {
@@ -73,14 +69,13 @@ export function ContainerSongs({ data, img, resetKey }) {
   // Restaurar canción al cargar datos
   useEffect(() => {
     if (!data?.length) return;
-    const savedIndex = localStorage.getItem("currentSongIndex");
-    const savedTime = localStorage.getItem("currentSongTime");
+    const savedIndex = Number(localStorage.getItem("currentSongIndex"));
+    const savedTime = Number(localStorage.getItem("currentSongTime")) || 0;
 
-    if (savedIndex && data[savedIndex]) {
-      const i = Number(savedIndex);
-      setIndex(i);
-      setSelected(data[i].id);
-      loadAndPlay(data[i].file, Number(savedTime) || 0);
+    if (!isNaN(savedIndex) && data[savedIndex]) {
+      setIndex(savedIndex);
+      setSelected(data[savedIndex].id);
+      loadAndPlay(data[savedIndex].file, savedTime);
     }
   }, [data]);
 
@@ -89,7 +84,6 @@ export function ContainerSongs({ data, img, resetKey }) {
     setSelected(null);
     setIsPaused(true);
     setIndex(0);
-
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -109,9 +103,7 @@ export function ContainerSongs({ data, img, resetKey }) {
             <div
               className={styles.cardSongContainer}
               onClick={() => handleSongClick(item, i)}
-              style={{
-                backgroundColor: colored ? "#9B3E82" : "#292424",
-              }}
+              style={{ backgroundColor: colored ? "#9B3E82" : "#292424" }}
             >
               <div className={styles.containerImage}>
                 <Image src={img} className={styles.avatarSong} alt="img" />
@@ -128,7 +120,7 @@ export function ContainerSongs({ data, img, resetKey }) {
                 )
               ) : (
                 <p>
-                  {minutes} : {seconds}
+                  {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
                 </p>
               )}
             </div>
