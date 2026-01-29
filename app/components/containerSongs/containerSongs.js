@@ -12,16 +12,19 @@ export function ContainerSongs({ data, img, resetKey }) {
 
   const audioRef = useRef(null);
 
-  const loadAndPlay = async (file) => {
+  // Carga y reproduce una canción
+  const loadAndPlay = async (file, startTime = 0) => {
     if (!audioRef.current) return;
     audioRef.current.src = file;
     audioRef.current.load();
+    audioRef.current.currentTime = startTime;
     try {
       await audioRef.current.play();
       setIsPaused(false);
     } catch {}
   };
 
+  // Siguiente canción
   const nextSong = async () => {
     if (!data?.length) return;
     const nextIndex = (index + 1) % data.length;
@@ -32,6 +35,7 @@ export function ContainerSongs({ data, img, resetKey }) {
     await loadAndPlay(next.file);
   };
 
+  // Click en canción
   const handleSongClick = async (item, i) => {
     if (!audioRef.current) return;
 
@@ -55,6 +59,32 @@ export function ContainerSongs({ data, img, resetKey }) {
     }
   };
 
+  // Guardar posición e índice cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (audioRef.current && !audioRef.current.paused) {
+        localStorage.setItem("currentSongTime", audioRef.current.currentTime);
+        localStorage.setItem("currentSongIndex", index);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [index]);
+
+  // Restaurar canción al cargar datos
+  useEffect(() => {
+    if (!data?.length) return;
+    const savedIndex = localStorage.getItem("currentSongIndex");
+    const savedTime = localStorage.getItem("currentSongTime");
+
+    if (savedIndex && data[savedIndex]) {
+      const i = Number(savedIndex);
+      setIndex(i);
+      setSelected(data[i].id);
+      loadAndPlay(data[i].file, Number(savedTime) || 0);
+    }
+  }, [data]);
+
+  // Reset al cambiar resetKey
   useEffect(() => {
     setSelected(null);
     setIsPaused(true);
@@ -98,7 +128,8 @@ export function ContainerSongs({ data, img, resetKey }) {
                 )
               ) : (
                 <p>
-                  {minutes} : {seconds}</p>
+                  {minutes} : {seconds}
+                </p>
               )}
             </div>
           </Card.Header>
