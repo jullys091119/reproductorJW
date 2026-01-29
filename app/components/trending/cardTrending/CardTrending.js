@@ -1,16 +1,22 @@
 
+import { useContext } from "react";
+import { AppContext } from "@/app/AppContext";
 import { Card } from "@heroui/react";
 import styles from "./CardTrending.module.css"
 import imgCantadas from "../../../portadas/cantadas.jpg";
-import imgCantemosGozo from "../../../portadas/cantemosConGozo.jpg"
 import coroOrquesta from "../../../portadas/coro.jpg";
 import originales from "../../../portadas/originales.jpg"
 import Image from "next/image";
 
+
 export default function CardTrending() {
+  const {setNameAlbum}  = useContext(AppContext)
+  const selectAlbum = (select) =>  {
+     setNameAlbum(select)
+  }
   return (
     <Card className={["border-none", styles.card]} variant="transparent" >
-      <div>
+      <div onClick={()=>selectAlbum("reuniones")}>
         <div className="relative z-0 h-[140px] w-[120px] shrink-0 overflow-hidden rounded-2xl sm:h-[120px] sm:w-[120px]">
           <Image
             alt="imgCantadas"
@@ -26,7 +32,7 @@ export default function CardTrending() {
           <p className={styles.albumName}>Cantemos con gozo (reuniones)</p>
         </div>
       </div>
-      <div>
+     {/*  <div>
         <div className="relative h-[140px] w-[120px] shrink-0 overflow-hidden rounded-2xl sm:h-[120px] sm:w-[120px]">
           <Image
             alt="imgCantadas"
@@ -40,8 +46,8 @@ export default function CardTrending() {
         <div className={styles.containerAlbumName}>
           <p className={styles.albumName}>Cantemos con gozo a Jehová</p>
         </div>
-      </div>
-      <div>
+      </div> */}
+      <div onClick={()=>selectAlbum("cantadas")}>
         <div className="relative h-[140px] w-[120px] shrink-0 overflow-hidden rounded-2xl sm:h-[120px] sm:w-[120px]">
           <Image
             alt="imgCantadas"
@@ -56,7 +62,7 @@ export default function CardTrending() {
           <p className={styles.albumName}>Cantemos con gozo(cantadas)</p>
         </div>
       </div>
-       <div>
+       <div  onClick={()=>selectAlbum("originales")}>
         <div className="relative h-[140px] w-[120px] shrink-0 overflow-hidden rounded-2xl sm:h-[120px] sm:w-[120px]">
           <Image
             alt="imgCantadas"
