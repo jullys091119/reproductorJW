@@ -32,9 +32,6 @@ export default function Home() {
     }
     loadAlbum()
 
-    if(nameAlbum) {
-      setResetColor(false)
-    }
   }, [nameAlbum])
 
   return (
@@ -42,7 +39,7 @@ export default function Home() {
       <Header />
       {!isMounted ? <Trending /> : <TrendingSkeletons />}
       <MenuNav />
-      <ContainerSongs data={dataSongs} img={imageAlbum} setColor={setResetColor}  resetKey={nameAlbum} />
+      <ContainerSongs data={dataSongs} img={imageAlbum}   resetKey={nameAlbum} />
     </div>
   );
 }

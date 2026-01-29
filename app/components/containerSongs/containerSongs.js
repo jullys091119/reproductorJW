@@ -1,106 +1,111 @@
-"use client"
-import { useEffect, useRef, useState, useContext } from 'react';
-import { Card } from '@heroui/react';
-import styles from "./containerSongs.module.css"
-import Image from 'next/image';
-import { CirclePauseFill, CirclePlayFill } from '@gravity-ui/icons';
-
-
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { Card } from "@heroui/react";
+import styles from "./containerSongs.module.css";
+import Image from "next/image";
+import { CirclePauseFill, CirclePlayFill } from "@gravity-ui/icons";
 
 export function ContainerSongs({ data, img, resetKey }) {
-  const [currentSong, setCurrentSong] = useState("")
-  const [selected, setSelected] = useState(null)
-  const [isPaused, setIsPaused] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [isPaused, setIsPaused] = useState(true);
+  const [index, setIndex] = useState(0);
 
-  const audioRef = useRef();
+  const audioRef = useRef(null);
 
-  
-
-  const playSong = async (file, id) => {
-    setCurrentSong(file)
-    setSelected(prev => (prev === id ? null : id))
-    setIsPaused(false);
-    audioRef.current.src = file
-    await audioRef.current.play()
-  }
-
-  const togglePause = (e) => {
-    e.stopPropagation();
-    setIsPaused((prev) => !prev);
+  const loadAndPlay = async (file) => {
+    if (!audioRef.current) return;
+    audioRef.current.src = file;
+    audioRef.current.load();
+    try {
+      await audioRef.current.play();
+      setIsPaused(false);
+    } catch {}
   };
 
+  const nextSong = async () => {
+    if (!data?.length) return;
+    const nextIndex = (index + 1) % data.length;
+    setIndex(nextIndex);
+    const next = data[nextIndex];
+    if (!next?.file) return;
+    setSelected(next.id);
+    await loadAndPlay(next.file);
+  };
 
-  useEffect(() => {
+  const handleSongClick = async (item, i) => {
     if (!audioRef.current) return;
 
-    if (currentSong) {
-      audioRef.current.play();
+    const isSameSong = selected === item.id;
+
+    if (!isSameSong) {
+      setSelected(item.id);
+      setIndex(i);
+      await loadAndPlay(item.file);
+      return;
     }
-  }, [currentSong]);
+
+    if (audioRef.current.paused) {
+      try {
+        await audioRef.current.play();
+        setIsPaused(false);
+      } catch {}
+    } else {
+      audioRef.current.pause();
+      setIsPaused(true);
+    }
+  };
 
   useEffect(() => {
-    if (!audioRef.current) return;
+    setSelected(null);
+    setIsPaused(true);
+    setIndex(0);
 
-    if (isPaused) audioRef.current.pause();
-    else audioRef.current.play();
-  }, [isPaused]);
-
-  useEffect(() => {
-  setSelected(null)
-  setCurrentSong("")
-  setIsPaused(false)
-}, [resetKey])
-
-  const RenderAudio = ({ link }) => {
-    return (
-      <audio ref={audioRef} src={`${link || null}`} >
-        Your browser does not support the <code>audio</code> element.
-      </audio>
-    )
-  }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+  }, [resetKey]);
 
   return (
-
     <Card role="article" aria-labelledby="card-title" className={styles.cardContainerSongs}>
-      {
-        data.map((item, i) => {
-          const titleCut = item.title.length > 25
-            ? `${item.title.slice(0, 30)}...`
-            : item.title;
-          const minutes = Math.floor(item.duration / 60)
-          const seconds = Math.round(item.duration % 60)
-          const colored = selected === item.id
-          return (
-            <Card.Header key={`${item.title}-${item.id}`}>
-              <div className={styles.cardSongContainer} onClick={() => playSong(item.file, item.id)} style={{
-                backgroundColor: colored
-                  ? "#9B3E82"
-                  : "#292424"
-              }}>
-                <div className={styles.containerImage}>
-                  <Image
-                    src={img}
-                    className={styles.avatarSong}
-                    alt='img'
-                  />
-                  <Card.Title id="card-title" className={styles.colorTitle}>{titleCut}</Card.Title>
-                </div>
-                {colored ? (
-                  isPaused ? (
-                    <CirclePauseFill onClick={(e) => togglePause(e)} />
+      {data.map((item, i) => {
+        const titleCut = item.title.length > 25 ? `${item.title.slice(0, 30)}...` : item.title;
+        const minutes = Math.floor(item.duration / 60);
+        const seconds = Math.round(item.duration % 60);
+        const colored = selected === item.id;
 
-                  ) : (
-                    <CirclePlayFill onClick={(e) => togglePause(e)} />
-                  )
-                ) : <p>{minutes} : {seconds}</p>}
+        return (
+          <Card.Header key={`${item.title}-${item.id}`}>
+            <div
+              className={styles.cardSongContainer}
+              onClick={() => handleSongClick(item, i)}
+              style={{
+                backgroundColor: colored ? "#9B3E82" : "#292424",
+              }}
+            >
+              <div className={styles.containerImage}>
+                <Image src={img} className={styles.avatarSong} alt="img" />
+                <Card.Title id="card-title" className={styles.colorTitle}>
+                  {titleCut}
+                </Card.Title>
               </div>
-            </Card.Header>
 
-          )
-        })
-      }
-      <RenderAudio link={currentSong} />
+              {colored ? (
+                isPaused ? (
+                  <CirclePlayFill />
+                ) : (
+                  <CirclePauseFill />
+                )
+              ) : (
+                <p>
+                  {minutes} : {seconds}</p>
+              )}
+            </div>
+          </Card.Header>
+        );
+      })}
+
+      <audio ref={audioRef} onEnded={nextSong} />
     </Card>
-  )
+  );
 }
-
