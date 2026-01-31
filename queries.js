@@ -47,3 +47,26 @@ export async function getAlbumCantadas() {
   }
 }
 
+export async function setLirycs() {
+  try {
+    const res = await fetch("/lyrics.json");
+    const data = await res.json();
+
+    // data es un array -> lo convertimos a objeto por id
+    const lyricsById = data.reduce((acc, song) => {
+      acc[song.id] = {
+        id: song.id,
+        numero: song.numero,
+        title: song.title,
+        url: song.url,
+        lyrics: song.lyrics, 
+      };
+      return acc;
+    }, {});
+     
+    return lyricsById;
+  } catch (error) {
+    console.log(error, "No se pudieron setear la letra");
+    return {};
+  }
+}

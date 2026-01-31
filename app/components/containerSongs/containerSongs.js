@@ -1,187 +1,252 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card } from "@heroui/react";
 import styles from "./containerSongs.module.css";
 import Image from "next/image";
-import { CirclePauseFill, CirclePlayFill } from "@gravity-ui/icons";
+import { CirclePauseFill, CirclePlayFill, FontCursor, Video } from "@gravity-ui/icons";
+import { setLirycs } from "@/queries";
 
-export function ContainerSongs({ data, img, resetKey }) {
+export function ContainerSongs({ data = [], img, resetKey }) {
   const [selected, setSelected] = useState(null);
-  const [isPaused, setIsPaused] = useState(true);
   const [index, setIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(true);
+  const [lyrics, setLyrics] = useState([]);
 
   const audioRef = useRef(null);
 
-  // Carga y reproduce una canción
-  const loadAndPlay = async (file, startTime = 0) => {
-    if (!audioRef.current) return;
-    audioRef.current.src = file;
-    audioRef.current.load();
-    audioRef.current.currentTime = startTime;
+  const formatTime = (duration = 0) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const loadAndPlay = useCallback(async (file, startTime = 0) => {
+    const audio = audioRef.current;
+    if (!audio || !file) return;
+
+    audio.src = file;
+    audio.load();
+    audio.currentTime = startTime;
+
     try {
-      await audioRef.current.play();
+      await audio.play();
       setIsPaused(false);
-    } catch {}
-  };
-
-  // Siguiente canción
-  const nextSong = async () => {
-    if (!data?.length) return;
-    const nextIndex = (index + 1) % data.length;
-    setIndex(nextIndex);
-    const next = data[nextIndex];
-    if (!next?.file) return;
-    setSelected(next.id);
-    await loadAndPlay(next.file);
-  };
-
-  // Click en canción (toggle play/pause)
-  const handleSongClick = async (item, i) => {
-    if (!audioRef.current) return;
-
-    const isSameSong = selected === item.id;
-
-    if (!isSameSong) {
-      setSelected(item.id);
-      setIndex(i);
-      await loadAndPlay(item.file);
-      return;
-    }
-
-    if (audioRef.current.paused) {
-      try {
-        await audioRef.current.play();
-        setIsPaused(false);
-      } catch {}
-    } else {
-      audioRef.current.pause();
+    } catch {
+      // autoplay policy o error de reproducción
       setIsPaused(true);
     }
-  };
+  }, []);
 
-  // Guardar posición e índice cada segundo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (audioRef.current && !audioRef.current.paused) {
-        localStorage.setItem("currentSongTime", audioRef.current.currentTime);
-        localStorage.setItem("currentSongIndex", index);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [index]);
+  const playSongByIndex = useCallback(
+    async (i) => {
+      if (!data?.length) return;
+      const song = data[i];
+      if (!song?.file) return;
 
-  // Restaurar canción al cargar datos
-  useEffect(() => {
-    if (!data?.length) return;
-    const savedIndex = localStorage.getItem("currentSongIndex");
-    const savedTime = localStorage.getItem("currentSongTime");
-
-    if (savedIndex && data[savedIndex]) {
-      const i = Number(savedIndex);
       setIndex(i);
-      setSelected(data[i].id);
-      loadAndPlay(data[i].file, Number(savedTime) || 0);
-    }
-  }, [data]);
+      setSelected(song.id);
+      await loadAndPlay(song.file);
+    },
+    [data, loadAndPlay]
+  );
 
-  // Media Session API - notificación / controles
+  const nextSong = useCallback(async () => {
+    if (!data?.length) return;
+    const nextIndex = (index + 1) % data.length;
+    await playSongByIndex(nextIndex);
+  }, [data, index, playSongByIndex]);
+
+  const prevSong = useCallback(async () => {
+    if (!data?.length) return;
+    const prevIndex = (index - 1 + data.length) % data.length;
+    await playSongByIndex(prevIndex);
+  }, [data, index, playSongByIndex]);
+
+  const togglePlayPause = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setIsPaused(false);
+      } catch {
+        setIsPaused(true);
+      }
+    } else {
+      audio.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  const handleSongClick = useCallback(
+    async (item, i) => {
+      const isSameSong = selected === item.id;
+
+      if (!isSameSong) {
+        await playSongByIndex(i);
+        return;
+      }
+
+      await togglePlayPause();
+    },
+    [selected, playSongByIndex, togglePlayPause]
+  );
+
+  // 🎵 Media Session handlers (solo 1 vez)
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+
+    navigator.mediaSession.setActionHandler("play", async () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      try {
+        await audio.play();
+        setIsPaused(false);
+      } catch {
+        setIsPaused(true);
+      }
+    });
+
+    navigator.mediaSession.setActionHandler("pause", () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.pause();
+      setIsPaused(true);
+    });
+
+    navigator.mediaSession.setActionHandler("previoustrack", prevSong);
+    navigator.mediaSession.setActionHandler("nexttrack", nextSong);
+
+    return () => {
+      // limpieza (algunos navegadores no lo requieren, pero es buena práctica)
+      try {
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("previoustrack", null);
+        navigator.mediaSession.setActionHandler("nexttrack", null);
+      } catch { }
+    };
+  }, [nextSong, prevSong]);
+
+
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     if (!data?.length) return;
 
-    const updateMediaSession = () => {
-      const currentSong = data[index];
-      if (!currentSong) return;
+    const currentSong = data[index];
+    if (!currentSong) return;
 
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentSong.title,
-        artist: "Jehová App",
-        artwork: [{ src: img, sizes: "512x512", type: "image/png" }],
-      });
-
-      navigator.mediaSession.setActionHandler("play", async () => {
-        try {
-          await audioRef.current.play();
-          setIsPaused(false);
-        } catch {}
-      });
-
-      navigator.mediaSession.setActionHandler("pause", () => {
-        audioRef.current.pause();
-        setIsPaused(true);
-      });
-
-      navigator.mediaSession.setActionHandler("previoustrack", async () => {
-        if (!data.length) return;
-        const prevIndex = (index - 1 + data.length) % data.length;
-        setIndex(prevIndex);
-        setSelected(data[prevIndex].id);
-        await loadAndPlay(data[prevIndex].file);
-      });
-
-      navigator.mediaSession.setActionHandler("nexttrack", async () => {
-        if (!data.length) return;
-        const nextIndex = (index + 1) % data.length;
-        setIndex(nextIndex);
-        setSelected(data[nextIndex].id);
-        await loadAndPlay(data[nextIndex].file);
-      });
-    };
-
-    updateMediaSession();
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentSong.title ?? "Canción",
+      artist: "Cantemos a nuestro Dios Jehová",
+      artwork: img
+        ? [{ src: img, sizes: "512x512", type: "image/png" }]
+        : [],
+    });
   }, [index, data, img]);
 
-  // Reset al cambiar resetKey
   useEffect(() => {
     setSelected(null);
-    setIsPaused(true);
     setIndex(0);
+    setIsPaused(true);
 
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    audio.src = "";
   }, [resetKey]);
 
+
+
+  useEffect(() => {
+    const loadLyrics = async () => {
+      const lyricsObj =  await setLirycs(); // tu función que hace fetch
+      setLyrics(lyricsObj); // tu estado
+    };
+    
+    loadLyrics();
+  }, []);
+
+
+  const showLyrics = () => {
+    alert("mostrando letras")
+  }
+
   return (
-    <Card role="article" aria-labelledby="card-title" className={styles.cardContainerSongs}>
+    <Card
+      role="article"
+      aria-label="Lista de canciones"
+      className={styles.cardContainerSongs}
+      style={{ display: data.length > 0 ? "flex" : "none" }}
+
+    >
+      <div className={styles.lirycs}>
+        <FontCursor color="pink" className={styles.icon}  onClick={showLyrics}/>
+        <Video color="pink" className={styles.icon} />
+
+      </div>
       {data.map((item, i) => {
-        const titleCut = item.title.length > 25 ? `${item.title.slice(0, 30)}...` : item.title;
-        const minutes = Math.floor(item.duration / 60);
-        const seconds = Math.round(item.duration % 60);
-        const colored = selected === item.id;
+        const title =
+          item.title?.length > 30 ? `${item.title.slice(0, 30)}...` : item.title;
+
+        const isSelected = selected === item.id;
+        const timeText = formatTime(item.duration);
 
         return (
-          <Card.Header key={`${item.title}-${item.id}`}>
+          <Card.Header key={`${item.id}-${item.title}`}>
+
             <div
               className={styles.cardSongContainer}
               onClick={() => handleSongClick(item, i)}
-              style={{ backgroundColor: colored ? "#9B3E82" : "#292424" }}
+              style={{ backgroundColor: isSelected ? "#9B3E82" : "#292424" }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSongClick(item, i);
+                }
+              }}
+              aria-label={`Reproducir ${item.title}`}
             >
               <div className={styles.containerImage}>
-                <Image src={img} className={styles.avatarSong} alt="img" />
-                <Card.Title id="card-title" className={styles.colorTitle}>
-                  {titleCut}
+                <Image
+                  src={img}
+                  width={40}
+                  height={40}
+                  className={styles.avatarSong}
+                  alt="img"
+                />
+
+                <Card.Title id={`song-${item.id}`} className={styles.colorTitle}>
+                  {title}
                 </Card.Title>
+
               </div>
 
-              {colored ? (
+              {isSelected ? (
                 isPaused ? (
                   <CirclePlayFill />
                 ) : (
                   <CirclePauseFill />
                 )
               ) : (
-                <p>
-                  {minutes} : {seconds}
-                </p>
+                <p>{timeText}</p>
               )}
             </div>
           </Card.Header>
+
         );
       })}
-
-      <audio ref={audioRef} onEnded={nextSong} />
+      <audio
+        ref={audioRef}
+        onEnded={nextSong}
+        onPlay={() => setIsPaused(false)}
+        onPause={() => setIsPaused(true)}
+      />
     </Card>
   );
 }
+1
