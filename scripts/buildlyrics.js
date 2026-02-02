@@ -1,18 +1,16 @@
-import fs from "fs";
-import path from "path";
-import * as cheerio from "cheerio";
+const fs = require("fs");
+const path = require("path");
+const cheerio = require("cheerio");
 
 const BASE = "https://www.jw.org";
-const LIST_URL =
-  "https://www.jw.org/es/biblioteca/m%C3%BAsica-canciones/cantemos-con-gozo/";
+const LIST_URL = "https://www.jw.org/es/biblioteca/m%C3%BAsica-canciones/cantemos-con-gozo/";
 
 const OUTPUT_PATH = path.join(process.cwd(), "public", "lyrics.json");
 
 async function fetchHtml(url) {
   const res = await fetch(url, {
     headers: {
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     },
   });
 
@@ -26,10 +24,8 @@ async function fetchHtml(url) {
 function normalizeLine(line) {
   return (
     String(line || "")
-      // quita NBSP
-      .replace(/\u00A0/g, " ")
-      // quita invisibles comunes
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/\u00A0/g, " ") // quita NBSP
+      .replace(/[\u200B-\u200D\uFEFF]/g, "") // quita invisibles comunes
       .trim()
   );
 }
@@ -58,10 +54,13 @@ function cleanLyrics(lines = []) {
       // referencias extras
       if (low.includes("(vea también")) return false;
 
+      // Eliminar "(canción X)" al final de las estrofas
+      if (line.match(/\(canción \d+\)$/)) return false;
+
       return true;
     });
 
-  // quitar duplicados seguidos
+  // eliminar duplicados consecutivos
   const noDupes = cleaned.filter((line, i) => line !== cleaned[i - 1]);
 
   return noDupes;
@@ -116,7 +115,7 @@ function extractLyricsFromSongPage(html) {
     lines.push(text);
   });
 
-  return cleanLyrics(lines);
+  return cleanLyrics(lines);  // Limpiar duplicados y líneas no deseadas
 }
 
 // =====================
@@ -163,12 +162,15 @@ async function run() {
       const lyricsArray = extractLyricsFromSongPage(html);
       const lyrics = lyricsArray.join("\n");
 
+      // Eliminar duplicados de la letra antes de agregarla
+      const uniqueLyrics = [...new Set(lyrics.split("\n"))].join("\n");
+
       results.push({
         id: song.numero,
         numero: song.numero,
         title,
         url: song.url,
-        lyrics, 
+        lyrics: uniqueLyrics,  // Letras únicas (sin duplicados)
       });
 
       console.log(`   ✅ OK (${lyricsArray.length} líneas limpias)`);
@@ -185,6 +187,7 @@ async function run() {
     }
   }
 
+  // Guardar en el archivo `lyrics.json`
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(results, null, 2), "utf-8");
 

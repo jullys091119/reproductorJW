@@ -5,12 +5,14 @@ import styles from "./containerSongs.module.css";
 import Image from "next/image";
 import { CirclePauseFill, CirclePlayFill, FontCursor, Video } from "@gravity-ui/icons";
 import { setLirycs } from "@/queries";
+import { MenuNav } from "../menuNav/menuNav";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [lyrics, setLyrics] = useState([]);
+  const [idLyrics, setIdLirycs] = useState("")
 
   const audioRef = useRef(null);
 
@@ -81,6 +83,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   const handleSongClick = useCallback(
     async (item, i) => {
+       setIdLirycs(item.idLyrics)
       const isSameSong = selected === item.id;
 
       if (!isSameSong) {
@@ -162,91 +165,91 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   useEffect(() => {
     const loadLyrics = async () => {
-      const lyricsObj =  await setLirycs(); // tu función que hace fetch
+      const lyricsObj = await setLirycs(); // tu función que hace fetch
       setLyrics(lyricsObj); // tu estado
     };
-    
+
     loadLyrics();
-  }, []);
 
+  }, [idLyrics]);
 
-  const showLyrics = () => {
-    alert("mostrando letras")
-  }
 
   return (
-    <Card
-      role="article"
-      aria-label="Lista de canciones"
-      className={styles.cardContainerSongs}
-      style={{ display: data.length > 0 ? "flex" : "none" }}
+    <div>
+      <MenuNav 
+       video={<Video width={40} height={40} />}
+       lirycs={<FontCursor height={40} width={40}  />}
+        idLyrics={idLyrics}
+       />
+    
+      <Card
+        role="article"
+        aria-label="Lista de canciones"
+        className={styles.cardContainerSongs}
+        style={{ display: data.length > 0 ? "flex" : "none" }}
 
-    >
-      <div className={styles.lirycs}>
-        <FontCursor color="pink" className={styles.icon}  onClick={showLyrics}/>
-        <Video color="pink" className={styles.icon} />
+      >
 
-      </div>
-      {data.map((item, i) => {
-        const title =
-          item.title?.length > 30 ? `${item.title.slice(0, 30)}...` : item.title;
+        {data.map((item, i) => {
+          const title =
+            item.title?.length > 30 ? `${item.title.slice(0, 30)}...` : item.title;
 
-        const isSelected = selected === item.id;
-        const timeText = formatTime(item.duration);
+          const isSelected = selected === item.id;
+          const timeText = formatTime(item.duration);
 
-        return (
-          <Card.Header key={`${item.id}-${item.title}`}>
+          return (
+            <Card.Header key={`${item.id}-${item.title}`}>
 
-            <div
-              className={styles.cardSongContainer}
-              onClick={() => handleSongClick(item, i)}
-              style={{ backgroundColor: isSelected ? "#9B3E82" : "#292424" }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleSongClick(item, i);
-                }
-              }}
-              aria-label={`Reproducir ${item.title}`}
-            >
-              <div className={styles.containerImage}>
-                <Image
-                  src={img}
-                  width={40}
-                  height={40}
-                  className={styles.avatarSong}
-                  alt="img"
-                />
+              <div
+                className={styles.cardSongContainer}
+                onClick={() => handleSongClick(item, i)}
+                style={{ backgroundColor: isSelected ? "#9B3E82" : "#292424" }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSongClick(item, i);
+                  }
+                }}
+                aria-label={`Reproducir ${item.title}`}
+              >
+                <div className={styles.containerImage}>
+                  <Image
+                    src={img}
+                    width={40}
+                    height={40}
+                    className={styles.avatarSong}
+                    alt="img"
+                  />
 
-                <Card.Title id={`song-${item.id}`} className={styles.colorTitle}>
-                  {title}
-                </Card.Title>
+                  <Card.Title id={`song-${item.id}`} className={styles.colorTitle}>
+                    {title}
+                  </Card.Title>
 
-              </div>
+                </div>
 
-              {isSelected ? (
-                isPaused ? (
-                  <CirclePlayFill />
+                {isSelected ? (
+                  isPaused ? (
+                    <CirclePlayFill />
+                  ) : (
+                    <CirclePauseFill />
+                  )
                 ) : (
-                  <CirclePauseFill />
-                )
-              ) : (
-                <p>{timeText}</p>
-              )}
-            </div>
-          </Card.Header>
+                  <p>{timeText}</p>
+                )}
+              </div>
+            </Card.Header>
 
-        );
-      })}
-      <audio
-        ref={audioRef}
-        onEnded={nextSong}
-        onPlay={() => setIsPaused(false)}
-        onPause={() => setIsPaused(true)}
-      />
-    </Card>
+          );
+        })}
+        <audio
+          ref={audioRef}
+          onEnded={nextSong}
+          onPlay={() => setIsPaused(false)}
+          onPause={() => setIsPaused(true)}
+        />
+      </Card>
+    </div>
   );
 }
-1
