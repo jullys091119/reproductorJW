@@ -1,0 +1,61 @@
+.lyrics {
+  padding: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.stanza {
+  margin-bottom: 1.5rem;
+}
+
+.stanza p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.estribillo {
+  margin-bottom: 1.5rem;
+  background: #f0f0f0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid #0070f3;
+  border-radius: 4px;
+}
+
+.estribillo p {
+  margin: 0;
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+/* ModalLyrics.module.css */
+
+/* Título más pequeño */
+.title {
+  font-size: 1.2rem;  /* Título más pequeño */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* Estilo para el texto bíblico */
+.biblicalText {
+  font-size: 1.1rem;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+/* Estilo para las estrofas */
+.lyrics {
+  font-size: 1rem;
+}
+
+.stanza {
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+/* Estilo para los estribillos */
+.estribillo {
+  font-weight: bold;
+  margin-bottom: 20px;
+}

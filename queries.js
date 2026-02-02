@@ -6,9 +6,10 @@ export async function getSongs() {
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
     const dataSongs = []
-    normalSongs.forEach(element => {
+    normalSongs.forEach((element,i) => {
       /*  console.log(element.title) */
       const songData = {
+        idLyrics: i + 1,
         id: element.docid,
         title: element.title,
         file: element.file.url,

@@ -7,7 +7,6 @@ import coroOrquesta from "./portadas/coro.jpg";
 import { Header } from "./components/Header/Header";
 import { Trending } from "./components/trending/Trending";
 import { TrendingSkeletons } from "./components/trending/trendingSkeleton/trendingSkeletons";
-import { MenuNav } from "./components/menuNav/menuNav";
 import { ContainerSongs } from "./components/containerSongs/containerSongs";
 import { CirclePauseFill, CirclePlayFill, FontCursor, Camera } from "@gravity-ui/icons";
 
@@ -39,7 +38,6 @@ export default function Home() {
     <div className="container">
       <Header />
       {!isMounted ? <Trending /> : <TrendingSkeletons />}
-      <MenuNav />
       <ContainerSongs data={dataSongs} img={imageAlbum} resetKey={nameAlbum} />
     </div>
   );
