@@ -5,6 +5,7 @@ import { Button, Modal } from "@heroui/react";
 import styles from "./ModalLyrics.module.css";
 
 export function ModalLyrics({ currentLyrics, isOpen, close }) {
+
   // Si no hay letras, no renderiza nada
   if (!currentLyrics?.length) return null;
 

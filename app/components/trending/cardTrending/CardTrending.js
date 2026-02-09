@@ -5,6 +5,7 @@ import { Card } from "@heroui/react";
 import styles from "./CardTrending.module.css"
 import imgCantadas from "../../../portadas/cantadas.jpg";
 import coroOrquesta from "../../../portadas/coro.jpg";
+import orquesta from  "../../../portadas/coroOrquesta.jpg"
 import originales from "../../../portadas/originales.jpg"
 import Image from "next/image";
 
@@ -75,6 +76,21 @@ export default function CardTrending() {
         </div>
         <div className={styles.containerAlbumName}>
           <p className={styles.albumName}>Canciones Originales</p>
+        </div>
+      </div>
+      <div  onClick={()=>selectAlbum("orquesta")}>
+        <div className="relative h-[140px] w-[120px] shrink-0 overflow-hidden rounded-2xl sm:h-[120px] sm:w-[120px]">
+          <Image
+            alt="imgCantadas"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover select-none"
+            loading="eager"
+            src={orquesta.src}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
+        <div className={styles.containerAlbumName}>
+          <p className={styles.albumName}>Coro y orquesta</p>
         </div>
       </div>
     </Card>

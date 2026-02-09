@@ -1,18 +1,21 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useContext } from "react";
+import { AppContext } from "@/app/AppContext";
 import { Card } from "@heroui/react";
 import styles from "./containerSongs.module.css";
 import Image from "next/image";
 import { CirclePauseFill, CirclePlayFill, FontCursor, Video } from "@gravity-ui/icons";
-import { setLirycs } from "@/queries";
 import { MenuNav } from "../menuNav/menuNav";
+import { setLirycs } from "@/queries";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
+  const {idLyrics, setIdLirycs} = useContext(AppContext)
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
-  const [lyrics, setLyrics] = useState([]);
-  const [idLyrics, setIdLirycs] = useState("")
+  const [currentLyrics, setCurrentLyrics] = useState([])
+
+
 
   const audioRef = useRef(null);
 
@@ -34,15 +37,22 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       await audio.play();
       setIsPaused(false);
     } catch {
-      // autoplay policy o error de reproducción
       setIsPaused(true);
     }
   }, []);
+
+
+  const setLyrics = async (idLyrics) => {
+     const lyrics = await setLirycs(idLyrics);
+    setCurrentLyrics(Object.values(lyrics).filter((lyric) => lyric.id === idLyrics));
+    console.log(currentLyrics, "actual")
+  }
 
   const playSongByIndex = useCallback(
     async (i) => {
       if (!data?.length) return;
       const song = data[i];
+      setLyrics(song.idLyrics)
       if (!song?.file) return;
 
       setIndex(i);
@@ -138,6 +148,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     if (!data?.length) return;
 
     const currentSong = data[index];
+  
+
     if (!currentSong) return;
 
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -147,7 +159,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
         ? [{ src: img, sizes: "512x512", type: "image/png" }]
         : [],
     });
-  }, [index, data, img]);
+  }, [index, data, img, idLyrics]);
 
   useEffect(() => {
     setSelected(null);
@@ -162,24 +174,12 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   }, [resetKey]);
 
 
-
-  useEffect(() => {
-    const loadLyrics = async () => {
-      const lyricsObj = await setLirycs(); // tu función que hace fetch
-      setLyrics(lyricsObj); // tu estado
-    };
-
-    loadLyrics();
-
-  }, [idLyrics]);
-
-
   return (
     <div>
       <MenuNav 
-       video={<Video width={40} height={40} />}
-       lirycs={<FontCursor height={40} width={40}  />}
-        idLyrics={idLyrics}
+       video={<Video width={30} height={30} />}
+       lirycs={<FontCursor height={30} width={30}  />}
+        currentLyrics={currentLyrics}
        />
     
       <Card
