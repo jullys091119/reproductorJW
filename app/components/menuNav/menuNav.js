@@ -1,18 +1,14 @@
+
 import Link from "next/link";
 import styles from "./menuNav.module.css";
-import { setLirycs } from "@/queries";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { ModalLyrics } from "./modalLyrics/ModalLyrics";
 
-export function MenuNav({ video, lirycs, idLyrics }) {
-  const [currentLyrics, setCurrentLyrics] = useState([]);
+export function MenuNav({ video, lirycs, currentLyrics}) {
   const [isOpen, setIsOpen] = useState(false);
 
   const showLyrics = async () => {
-    setIsOpen(true);
-    const lyrics = await setLirycs(idLyrics);
-    // filtramos la canción correcta
-    setCurrentLyrics(Object.values(lyrics).filter((lyric) => lyric.id === idLyrics));
+    setIsOpen(true)
   };
 
   return (
@@ -24,7 +20,7 @@ export function MenuNav({ video, lirycs, idLyrics }) {
       </ul>
 
       <ModalLyrics
-        currentLyrics={currentLyrics}
+        currentLyrics={currentLyrics}   
         isOpen={isOpen}
         close={() => setIsOpen(false)}
       />
