@@ -4,16 +4,17 @@ import { AppContext } from "@/app/AppContext";
 import { Card } from "@heroui/react";
 import styles from "./containerSongs.module.css";
 import Image from "next/image";
-import { CirclePauseFill, CirclePlayFill, FontCursor, Video } from "@gravity-ui/icons";
+import { CirclePauseFill, CirclePlayFill, FontCursor, Video, CircleChevronRightFill, CircleChevronLeftFill } from "@gravity-ui/icons";
 import { MenuNav } from "../menuNav/menuNav";
 import { setLirycs } from "@/queries";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
-  const {idLyrics, setIdLirycs} = useContext(AppContext)
+  const { idLyrics, setIdLirycs } = useContext(AppContext)
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [currentLyrics, setCurrentLyrics] = useState([])
+  const [infoSong, setInfoSong] = useState({})
 
 
 
@@ -43,9 +44,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
 
   const setLyrics = async (idLyrics) => {
-     const lyrics = await setLirycs(idLyrics);
+    const lyrics = await setLirycs(idLyrics);
     setCurrentLyrics(Object.values(lyrics).filter((lyric) => lyric.id === idLyrics));
-    console.log(currentLyrics, "actual")
   }
 
   const playSongByIndex = useCallback(
@@ -93,7 +93,13 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   const handleSongClick = useCallback(
     async (item, i) => {
-       setIdLirycs(item.idLyrics)
+      setIdLirycs(item.idLyrics)
+      const song = item.title.length > 25 ? `${item.title.slice(0, 25)}...` : item.title
+      setInfoSong({
+        name: song,
+        duration: item.duration
+      })
+
       const isSameSong = selected === item.id;
 
       if (!isSameSong) {
@@ -106,7 +112,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     [selected, playSongByIndex, togglePlayPause]
   );
 
-  // 🎵 Media Session handlers (solo 1 vez)
+
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
 
@@ -140,6 +146,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
         navigator.mediaSession.setActionHandler("nexttrack", null);
       } catch { }
     };
+
   }, [nextSong, prevSong]);
 
 
@@ -148,7 +155,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     if (!data?.length) return;
 
     const currentSong = data[index];
-  
+
 
     if (!currentSong) return;
 
@@ -174,14 +181,20 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   }, [resetKey]);
 
 
+  useEffect(() => {
+
+    console.log(infoSong, "<<")
+  }, [infoSong])
+
+
   return (
     <div>
-      <MenuNav 
-       video={<Video width={30} height={30} />}
-       lirycs={<FontCursor height={30} width={30}  />}
+      <MenuNav
+        video={<Video width={30} height={30} />}
+        lirycs={<FontCursor height={30} width={30} />}
         currentLyrics={currentLyrics}
-       />
-    
+      />
+
       <Card
         role="article"
         aria-label="Lista de canciones"
@@ -250,6 +263,27 @@ export function ContainerSongs({ data = [], img, resetKey }) {
           onPause={() => setIsPaused(true)}
         />
       </Card>
+
+      {infoSong && <div className={styles.progressbarContainer}>
+        <div className={styles.containerImageSong}>
+          <Image
+            src={img || null}
+            width={40}
+            height={40}
+            className={styles.avatarSong}
+            alt="img"
+          />
+
+          {infoSong.name}
+
+        </div>
+        <div className={styles.controls}>
+          <CircleChevronLeftFill width={25} height={25} />
+          <CirclePlayFill width={25} height={25} />
+          <CircleChevronRightFill width={25} height={25} />
+        </div>
+
+      </div>}
     </div>
   );
 }
