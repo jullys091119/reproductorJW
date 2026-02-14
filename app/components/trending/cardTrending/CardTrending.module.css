@@ -20,3 +20,9 @@
   font-size: 13px;
   text-align: center;
 }
+
+.progressbarContainer {
+  background-color: red;
+  height: 50px;
+  width: 100%;
+} 

@@ -43,3 +43,25 @@
   width: 30px;
   height: 30px;
 }
+
+.progressbarContainer {
+    background-color: #1b1b1b94;
+    display: flex;
+    align-items: center;
+    gap: 10px 20px;
+    padding: 10px;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.containerImageSong {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
