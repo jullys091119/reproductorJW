@@ -17,9 +17,8 @@ import { MenuNav } from "../menuNav/menuNav";
 import { setLirycs } from "@/queries";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
-
   const audioRef = useRef(null);
-
+  console.log(img)
   // 🔴 EL ARREGLO REAL
   const indexRef = useRef(0);
 
@@ -31,6 +30,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const [currentLyrics, setCurrentLyrics] = useState([]);
   const [infoSong, setInfoSong] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [imgAlbum, setImgAlbum] = useState("")
 
   // mantener sincronizado el índice real del reproductor
   useEffect(() => {
@@ -103,7 +103,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIndex(i);
     setSelected(song.id);
     setLyrics(song.idLyrics);
-    const  title  = song.title.length > 25 ? `${song.title.slice(0,25)}...`: song.title
+    const title = song.title.length > 25 ? `${song.title.slice(0, 25)}...` : song.title
     setInfoSong(title)
 
     if (autoPlay) {
@@ -141,7 +141,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     }
 
     const prevIndex = (indexRef.current - 1 + data.length) % data.length;
-    playSongByIndex(prevIndex, true, );
+    playSongByIndex(prevIndex, true,);
 
   }, [data, playSongByIndex]);
 
@@ -172,7 +172,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   const handleSongClick = useCallback(async (item, i) => {
     setIdLirycs(item.idLyrics);
-   
+
 
     const isSameSong = selected === item.id;
 
@@ -280,11 +280,12 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   }, [resetKey]);
 
+
   return (
     <div>
       <MenuNav
-        video={<Video width={30} height={30} />}
-        lirycs={<FontCursor height={30} width={30} />}
+        video={<Video width={20} height={20} />}
+        lirycs={<FontCursor height={20} width={20} />}
         currentLyrics={currentLyrics}
       />
 
@@ -305,6 +306,9 @@ export function ContainerSongs({ data = [], img, resetKey }) {
           const isSelected = selected === item.id;
           const timeText = formatTime(item.duration);
 
+          const showImg = img[i]?.img || img
+
+
           return (
             <Card.Header key={`${item.id}-${item.title}`}>
               <div
@@ -317,7 +321,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
                 <div className={styles.containerImage}>
                   <Image
-                    src={img}
+                    src={showImg}
                     width={40}
                     height={40}
                     className={styles.avatarSong}
@@ -348,17 +352,17 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
       </Card>
 
-
-      <div className={styles.progressBar}>
-        <div
-          className={styles.progress}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
       {infoSong && (
         <div className={styles.progressbarContainer}>
+          <div className={styles.progressBar}>
+            <div
+              className={styles.progress}
+              style={{ width: `${progress}%` }}
+            />
 
-          <div className={styles.containerImageSong}>
+          </div>
+
+          <div className={styles.containerImageSong}>s
             <Image
               src={img}
               width={40}
