@@ -75,12 +75,13 @@
     background-color: #ECF5F9;
     height: 3px;
     width: 100%;
-    position: relative;
+    position: absolute;
     overflow: hidden;
+    top: 0px;
 }
 
 .progress {
-    background-color: green;
+    background-color: #46353F;
     height: inherit;
 
     top: 90px;
