@@ -15,11 +15,10 @@ import {
 } from "@gravity-ui/icons";
 import { MenuNav } from "../menuNav/menuNav";
 import { setLirycs } from "@/queries";
+import { ModalFullPlayer } from "../modalFullPlayer/ModalFullPlayer";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
   const audioRef = useRef(null);
-  console.log(img)
-  // 🔴 EL ARREGLO REAL
   const indexRef = useRef(0);
 
   const { setIdLirycs } = useContext(AppContext);
@@ -30,24 +29,18 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const [currentLyrics, setCurrentLyrics] = useState([]);
   const [infoSong, setInfoSong] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [imgAlbum, setImgAlbum] = useState("")
+  const [isOpenFullPlayer, setIsOpenFullPlayer] = useState(false)
 
-  // mantener sincronizado el índice real del reproductor
+  // Mantener índice sincronizado
   useEffect(() => {
     indexRef.current = index;
   }, [index]);
-
-
 
   const formatTime = (duration = 0) => {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
-
-
-
-
 
   const loadSong = useCallback((file, startTime = 0) => {
     const audio = audioRef.current;
@@ -60,10 +53,6 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setProgress(0);
     setIsPaused(true);
   }, []);
-
-
-
-
 
   const loadAndPlay = useCallback(async (file, startTime = 0) => {
     const audio = audioRef.current;
@@ -81,20 +70,17 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     }
   }, []);
 
-
-
-
-
-
   const setLyrics = async (idLyrics) => {
     const lyrics = await setLirycs(idLyrics);
     setCurrentLyrics(Object.values(lyrics).filter((l) => l.id === idLyrics));
   };
 
+  const openFullPlayer = (isOpenFullPlayer) => {
+    console.log(isOpenFullPlayer)
+    setIsOpenFullPlayer(isOpenFullPlayer)
+  }
 
-
-  //esta
-  const playSongByIndex = useCallback(async (i, autoPlay = true,) => {
+  const playSongByIndex = useCallback(async (i, autoPlay = true) => {
     if (!data?.length) return;
 
     const song = data[i];
@@ -103,34 +89,23 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIndex(i);
     setSelected(song.id);
     setLyrics(song.idLyrics);
-    const title = song.title.length > 25 ? `${song.title.slice(0, 25)}...` : song.title
-    setInfoSong(title)
+
+    const title = song.title.length > 25 ? `${song.title.slice(0, 25)}...` : song.title;
+    setInfoSong(title);
 
     if (autoPlay) {
       await loadAndPlay(song.file);
     } else {
       loadSong(song.file);
     }
-
-
-  }, [data, loadAndPlay, loadSong, infoSong]);
-
-
-
+  }, [data, loadAndPlay, loadSong]);
 
   const nextSong = useCallback(() => {
     if (!data?.length) return;
-
     const nextIndex = (indexRef.current + 1) % data.length;
     playSongByIndex(nextIndex, true);
-
   }, [data, playSongByIndex]);
 
-
-
-
-
-  // 🔴 prev correcto
   const prevSong = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !data?.length) return;
@@ -141,13 +116,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     }
 
     const prevIndex = (indexRef.current - 1 + data.length) % data.length;
-    playSongByIndex(prevIndex, true,);
-
+    playSongByIndex(prevIndex, true);
   }, [data, playSongByIndex]);
-
-
-
-
 
   const togglePlayPause = useCallback(async () => {
     const audio = audioRef.current;
@@ -166,14 +136,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     }
   }, []);
 
-
-
-
-
   const handleSongClick = useCallback(async (item, i) => {
     setIdLirycs(item.idLyrics);
-
-
     const isSameSong = selected === item.id;
 
     if (!isSameSong) {
@@ -182,16 +146,13 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     }
 
     await togglePlayPause();
-
   }, [selected, playSongByIndex, togglePlayPause, setIdLirycs]);
 
 
 
 
 
-  // eventos del audio
   useEffect(() => {
-
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -216,22 +177,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("ended", onEnded);
     };
-
   }, [data.length, playSongByIndex]);
 
-  // 🔴 MediaSession ARREGLADO
+  // MediaSession
   useEffect(() => {
-
     if (!("mediaSession" in navigator)) return;
 
-    navigator.mediaSession.setActionHandler("play", () => {
-      audioRef.current?.play();
-    });
-
-    navigator.mediaSession.setActionHandler("pause", () => {
-      audioRef.current?.pause();
-    });
-
+    navigator.mediaSession.setActionHandler("play", () => audioRef.current?.play());
+    navigator.mediaSession.setActionHandler("pause", () => audioRef.current?.pause());
     navigator.mediaSession.setActionHandler("previoustrack", prevSong);
     navigator.mediaSession.setActionHandler("nexttrack", nextSong);
 
@@ -243,12 +196,10 @@ export function ContainerSongs({ data = [], img, resetKey }) {
         navigator.mediaSession.setActionHandler("nexttrack", null);
       } catch { }
     };
-
   }, [prevSong, nextSong]);
 
-  // metadata del lockscreen
+  // Metadata lockscreen
   useEffect(() => {
-
     if (!("mediaSession" in navigator)) return;
     if (!data?.length) return;
 
@@ -258,14 +209,11 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentSong.title ?? "Canción",
       artist: "Cantemos a nuestro Dios Jehová",
-      artwork: img
-        ? [{ src: img, sizes: "512x512", type: "image/png" }]
-        : []
+      artwork: img ? [{ src: img, sizes: "512x512", type: "image/png" }] : []
     });
-
   }, [index, data, img]);
 
-  // reset
+  // Reset
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -277,9 +225,11 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIndex(0);
     setIsPaused(true);
     setProgress(0);
-
   }, [resetKey]);
 
+  useEffect(() => {
+    console.log(isOpenFullPlayer, "isOpen")
+  }, [isOpenFullPlayer])
 
   return (
     <div>
@@ -295,22 +245,15 @@ export function ContainerSongs({ data = [], img, resetKey }) {
         className={styles.cardContainerSongs}
         style={{ display: data.length > 0 ? "flex" : "none" }}
       >
-
         {data.map((item, i) => {
-
-          const title =
-            item.title?.length > 30
-              ? `${item.title.slice(0, 30)}...`
-              : item.title;
-
+          const title = item.title?.length > 30 ? `${item.title.slice(0, 30)}...` : item.title;
           const isSelected = selected === item.id;
           const timeText = formatTime(item.duration);
-
-          const showImg = img[i]?.img || img
-
+          const showImg = img[i]?.img || img;
 
           return (
             <Card.Header key={`${item.id}-${item.title}`}>
+
               <div
                 className={styles.cardSongContainer}
                 onClick={() => handleSongClick(item, i)}
@@ -318,73 +261,67 @@ export function ContainerSongs({ data = [], img, resetKey }) {
                 role="button"
                 tabIndex={0}
               >
-
                 <div className={styles.containerImage}>
-                  <Image
-                    src={showImg}
-                    width={40}
-                    height={40}
-                    className={styles.avatarSong}
-                    alt="img"
-                  />
-
-                  <Card.Title className={styles.colorTitle}>
-                    {title}
-                  </Card.Title>
+                  <Image src={showImg} width={40} height={40} className={styles.avatarSong} alt="img" />
+                  <Card.Title className={styles.colorTitle}>{title}</Card.Title>
                 </div>
 
-                {isSelected
-                  ? (isPaused ? <CirclePlayFill /> : <CirclePauseFill />)
-                  : <p>{timeText}</p>
-                }
-
+                {isSelected ? (isPaused ? <CirclePlayFill /> : <CirclePauseFill />) : <p>{timeText}</p>}
               </div>
             </Card.Header>
           );
         })}
 
-        <audio
-          ref={audioRef}
-          preload="metadata"
-          onPlay={() => setIsPaused(false)}
-          onPause={() => setIsPaused(true)}
-        />
 
+        <audio ref={audioRef} preload="metadata" onPlay={() => setIsPaused(false)} onPause={() => setIsPaused(true)} />
       </Card>
 
       {infoSong && (
-        <div className={styles.progressbarContainer}>
-          <div className={styles.progressBar}>
+        <div style={{maxWidth: "100%", position: "relative"}}>
+
+          <div className={styles.progressbarContainer} onClick={() => setIsOpenFullPlayer(true)}>
+            {/* Barra de progreso clickeable */}
             <div
-              className={styles.progress}
-              style={{ width: `${progress}%` }}
-            />
+              className={styles.progressBar}
+              onClick={(e) => {
+                const audio = audioRef.current;
+                if (!audio || !audio.duration) return;
 
-          </div>
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const newProgress = clickX / rect.width;
 
-          <div className={styles.containerImageSong}>s
-            <Image
-              src={img}
-              width={40}
-              height={40}
-              className={styles.avatarSong}
-              alt="img"
-            />
-            {infoSong}
-          </div>
+                audio.currentTime = newProgress * audio.duration;
+                setProgress(newProgress * 100);
+              }}
+            >
+              <div className={styles.progress} style={{ width: `${progress}%` }} />
+            </div>
 
-          <div className={styles.controls}>
-            <CircleChevronLeftFill width={25} height={25} onClick={prevSong} />
-            {isPaused
-              ? <CirclePlayFill width={25} height={25} onClick={togglePlayPause} />
-              : <CirclePauseFill width={25} height={25} onClick={togglePlayPause} />
-            }
-            <CircleChevronRightFill width={25} height={25} onClick={nextSong} />
-          </div>
+            <div className={styles.containerImageSong}>
+              <Image src={img} width={40} height={40} className={styles.avatarSong} alt="img" />
+              {infoSong}
+            </div>
 
+            <div className={styles.controls}>
+              <CircleChevronLeftFill width={25} height={25} onClick={prevSong} />
+              {isPaused ? (
+                <CirclePlayFill width={25} height={25} onClick={togglePlayPause} />
+              ) : (
+                <CirclePauseFill width={25} height={25} onClick={togglePlayPause} />
+              )}
+              <CircleChevronRightFill width={25} height={25} onClick={nextSong} />
+            </div>
+        </div>
         </div>
       )}
-
+      {isOpenFullPlayer && (
+        <ModalFullPlayer
+          open={isOpenFullPlayer}
+          close={() => setIsOpenFullPlayer(false)}
+          dataSong = {{img:img, name:infoSong}}
+        />
+      )}
     </div>
   );
 }
