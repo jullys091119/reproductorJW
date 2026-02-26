@@ -81,9 +81,8 @@
 }
 
 .progress {
-    background-color: #46353F;
+    background-color: rgb(155, 62, 130);
     height: inherit;
-
     top: 90px;
     width: 0;
     transform-origin: left;

@@ -13,12 +13,12 @@
 
 .circle {
     border-radius: 100%;
-    height: 350px;
-    width: 350px;
+    height: 300px;
+    width: 300px;
     position: absolute;
-    top:80px;
+    top:120px;
     bottom: 0;
-    left: 0px;
+    left: 20px;
     right: 0;
     overflow: hidden;
 }
@@ -38,5 +38,25 @@
 .title {
     margin-top: 70px;
     font-size: 23px;
+    color: white;
+}
+
+.fullcontrols {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 50px 0;
+}
+
+.containerProgress {
+    position: relative;
+    margin-top: 40px;
+}
+
+.containerTimer {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0px;
     color: white;
 }
