@@ -21,46 +21,36 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const audioRef = useRef(null);
   const indexRef = useRef(0);
 
-  const { setIdLirycs } = useContext(AppContext);
+  const { setIdLirycs, isPaused, setIsPaused } = useContext(AppContext);
 
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(true);
   const [currentLyrics, setCurrentLyrics] = useState([]);
+  const [currentSong, setCurrentSong] = useState(null);
   const [infoSong, setInfoSong] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [isOpenFullPlayer, setIsOpenFullPlayer] = useState(false)
+  const [isOpenFullPlayer, setIsOpenFullPlayer] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [nameAlbum, setNameAlbum] = useState("")
+  const [imageAlbum, setImageAlbum] = useState("")
 
-  // Mantener índice sincronizado
   useEffect(() => {
     indexRef.current = index;
   }, [index]);
 
-  const formatTime = (duration = 0) => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = Math.floor(duration % 60);
+  const formatTime = (time = 0) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const loadSong = useCallback((file, startTime = 0) => {
+  const loadAndPlay = useCallback(async (file) => {
     const audio = audioRef.current;
     if (!audio || !file) return;
 
     audio.src = file;
     audio.load();
-    audio.currentTime = startTime;
-
-    setProgress(0);
-    setIsPaused(true);
-  }, []);
-
-  const loadAndPlay = useCallback(async (file, startTime = 0) => {
-    const audio = audioRef.current;
-    if (!audio || !file) return;
-
-    audio.src = file;
-    audio.load();
-    audio.currentTime = startTime;
 
     try {
       await audio.play();
@@ -68,19 +58,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     } catch {
       setIsPaused(true);
     }
-  }, []);
+  }, [setIsPaused]);
 
   const setLyrics = async (idLyrics) => {
     const lyrics = await setLirycs(idLyrics);
-    setCurrentLyrics(Object.values(lyrics).filter((l) => l.id === idLyrics));
+    setCurrentLyrics(Object.values(lyrics).filter(l => l.id === idLyrics));
   };
 
-  const openFullPlayer = (isOpenFullPlayer) => {
-    console.log(isOpenFullPlayer)
-    setIsOpenFullPlayer(isOpenFullPlayer)
-  }
-
-  const playSongByIndex = useCallback(async (i, autoPlay = true) => {
+  const playSongByIndex = useCallback(async (i) => {
     if (!data?.length) return;
 
     const song = data[i];
@@ -89,21 +74,24 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIndex(i);
     setSelected(song.id);
     setLyrics(song.idLyrics);
+    setNameAlbum(song.nameAlbum)
+    const showImg = img[i]?.img || img;
+    setImageAlbum(showImg)
 
-    const title = song.title.length > 25 ? `${song.title.slice(0, 25)}...` : song.title;
+    const title =
+      song.title.length > 25
+        ? `${song.title.slice(0, 25)}...`
+        : song.title;
+
     setInfoSong(title);
 
-    if (autoPlay) {
-      await loadAndPlay(song.file);
-    } else {
-      loadSong(song.file);
-    }
-  }, [data, loadAndPlay, loadSong]);
+    await loadAndPlay(song.file);
+  }, [data, loadAndPlay]);
 
   const nextSong = useCallback(() => {
     if (!data?.length) return;
     const nextIndex = (indexRef.current + 1) % data.length;
-    playSongByIndex(nextIndex, true);
+    playSongByIndex(nextIndex);
   }, [data, playSongByIndex]);
 
   const prevSong = useCallback(() => {
@@ -115,8 +103,10 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       return;
     }
 
-    const prevIndex = (indexRef.current - 1 + data.length) % data.length;
-    playSongByIndex(prevIndex, true);
+    const prevIndex =
+      (indexRef.current - 1 + data.length) % data.length;
+
+    playSongByIndex(prevIndex);
   }, [data, playSongByIndex]);
 
   const togglePlayPause = useCallback(async () => {
@@ -134,38 +124,130 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       audio.pause();
       setIsPaused(true);
     }
-  }, []);
+  }, [setIsPaused]);
 
-  const handleSongClick = useCallback(async (item, i) => {
-    setIdLirycs(item.idLyrics);
-    const isSameSong = selected === item.id;
+  const handleSongClick = useCallback(
+    async (item, i) => {
+      setIdLirycs(item.idLyrics);
+      const isSameSong = selected === item.id;
 
-    if (!isSameSong) {
-      await playSongByIndex(i, true);
-      return;
-    }
+      if (!isSameSong) {
+        await playSongByIndex(i);
+        return;
+      }
 
-    await togglePlayPause();
-  }, [selected, playSongByIndex, togglePlayPause, setIdLirycs]);
+      await togglePlayPause();
+    },
+    [selected, playSongByIndex, togglePlayPause, setIdLirycs]
+  );
 
+  const ProgressBar = () => (
+    <div
+      className={styles.progressBar}
+      onClick={(e) => {
+        const audio = audioRef.current;
+        if (!audio || !audio.duration) return;
 
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const newProgress = clickX / rect.width;
 
+        audio.currentTime = newProgress * audio.duration;
+        setProgress(newProgress * 100);
+      }}
+    >
+      <div
+        className={styles.progress}
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
 
+  const ControlsReproductor = () => {
+    
+    return (
+
+      <div className={styles.progressbarContainer}>
+        <ProgressBar />
+
+        <div className={styles.containerImageSong}>
+          <Image
+            src={imageAlbum}
+            width={40}
+            height={40}
+            className={styles.avatarSong}
+            alt="img"
+          />
+          {infoSong}
+        </div>
+
+        <div className={styles.controls}>
+          <CircleChevronLeftFill
+            width={25}
+            height={25}
+            onClick={(e) => {
+              e.stopPropagation();
+              prevSong();
+            }}
+          />
+
+          {isPaused ? (
+            <CirclePlayFill
+              width={25}
+              height={25}
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlayPause();
+              }}
+            />
+          ) : (
+            <CirclePauseFill
+              width={25}
+              height={25}
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePlayPause();
+              }}
+            />
+          )}
+
+          <CircleChevronRightFill
+            width={25}
+            height={25}
+            onClick={(e) => {
+              e.stopPropagation();
+              nextSong();
+            }}
+          />
+        </div>
+      </div>
+    )
+  };
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const onLoaded = () => setProgress(0);
+    const onLoaded = () => {
+      setDuration(audio.duration);
+      setCurrentTime(0);
+      setProgress(0);
+    };
 
     const onTimeUpdate = () => {
       if (!audio.duration) return;
-      setProgress((audio.currentTime / audio.duration) * 100);
+
+      const current = audio.currentTime;
+      const total = audio.duration;
+
+      setCurrentTime(current);
+      setProgress((current / total) * 100);
     };
 
     const onEnded = () => {
-      const nextIndex = (indexRef.current + 1) % data.length;
-      playSongByIndex(nextIndex, true);
+      const nextIndex =
+        (indexRef.current + 1) % data.length;
+      playSongByIndex(nextIndex);
     };
 
     audio.addEventListener("loadedmetadata", onLoaded);
@@ -179,41 +261,6 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     };
   }, [data.length, playSongByIndex]);
 
-  // MediaSession
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
-
-    navigator.mediaSession.setActionHandler("play", () => audioRef.current?.play());
-    navigator.mediaSession.setActionHandler("pause", () => audioRef.current?.pause());
-    navigator.mediaSession.setActionHandler("previoustrack", prevSong);
-    navigator.mediaSession.setActionHandler("nexttrack", nextSong);
-
-    return () => {
-      try {
-        navigator.mediaSession.setActionHandler("play", null);
-        navigator.mediaSession.setActionHandler("pause", null);
-        navigator.mediaSession.setActionHandler("previoustrack", null);
-        navigator.mediaSession.setActionHandler("nexttrack", null);
-      } catch { }
-    };
-  }, [prevSong, nextSong]);
-
-  // Metadata lockscreen
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
-    if (!data?.length) return;
-
-    const currentSong = data[index];
-    if (!currentSong) return;
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: currentSong.title ?? "Canción",
-      artist: "Cantemos a nuestro Dios Jehová",
-      artwork: img ? [{ src: img, sizes: "512x512", type: "image/png" }] : []
-    });
-  }, [index, data, img]);
-
-  // Reset
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -225,11 +272,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIndex(0);
     setIsPaused(true);
     setProgress(0);
-  }, [resetKey]);
-
-  useEffect(() => {
-    console.log(isOpenFullPlayer, "isOpen")
-  }, [isOpenFullPlayer])
+  }, [resetKey, setIsPaused]);
 
   return (
     <div>
@@ -240,86 +283,87 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       />
 
       <Card
-        role="article"
-        aria-label="Lista de canciones"
         className={styles.cardContainerSongs}
         style={{ display: data.length > 0 ? "flex" : "none" }}
       >
         {data.map((item, i) => {
-          const title = item.title?.length > 30 ? `${item.title.slice(0, 30)}...` : item.title;
+          const title =
+            item.title?.length > 30
+              ? `${item.title.slice(0, 30)}...`
+              : item.title;
+
           const isSelected = selected === item.id;
           const timeText = formatTime(item.duration);
           const showImg = img[i]?.img || img;
 
           return (
             <Card.Header key={`${item.id}-${item.title}`}>
-
               <div
                 className={styles.cardSongContainer}
                 onClick={() => handleSongClick(item, i)}
-                style={{ backgroundColor: isSelected ? "#9B3E82" : "#292424" }}
-                role="button"
-                tabIndex={0}
+                style={{
+                  backgroundColor: isSelected
+                    ? "#9B3E82"
+                    : "#292424",
+                }}
               >
                 <div className={styles.containerImage}>
-                  <Image src={showImg} width={40} height={40} className={styles.avatarSong} alt="img" />
-                  <Card.Title className={styles.colorTitle}>{title}</Card.Title>
+                  <Image
+                    src={showImg}
+                    width={40}
+                    height={40}
+                    className={styles.avatarSong}
+                    alt="img"
+                  />
+                  <Card.Title className={styles.colorTitle}>
+                    {title}
+                  </Card.Title>
                 </div>
 
-                {isSelected ? (isPaused ? <CirclePlayFill /> : <CirclePauseFill />) : <p>{timeText}</p>}
+                {isSelected ? (
+                  isPaused ? (
+                    <CirclePlayFill />
+                  ) : (
+                    <CirclePauseFill />
+                  )
+                ) : (
+                  <p>{timeText}</p>
+                )}
               </div>
             </Card.Header>
           );
         })}
 
-
-        <audio ref={audioRef} preload="metadata" onPlay={() => setIsPaused(false)} onPause={() => setIsPaused(true)} />
+        <audio
+          ref={audioRef}
+          preload="metadata"
+          onPlay={() => setIsPaused(false)}
+          onPause={() => setIsPaused(true)}
+        />
       </Card>
 
       {infoSong && (
-        <div style={{maxWidth: "100%", position: "relative"}}>
-
-          <div className={styles.progressbarContainer} onClick={() => setIsOpenFullPlayer(true)}>
-            {/* Barra de progreso clickeable */}
-            <div
-              className={styles.progressBar}
-              onClick={(e) => {
-                const audio = audioRef.current;
-                if (!audio || !audio.duration) return;
-
-                const rect = e.currentTarget.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const newProgress = clickX / rect.width;
-
-                audio.currentTime = newProgress * audio.duration;
-                setProgress(newProgress * 100);
-              }}
-            >
-              <div className={styles.progress} style={{ width: `${progress}%` }} />
-            </div>
-
-            <div className={styles.containerImageSong}>
-              <Image src={img} width={40} height={40} className={styles.avatarSong} alt="img" />
-              {infoSong}
-            </div>
-
-            <div className={styles.controls}>
-              <CircleChevronLeftFill width={25} height={25} onClick={prevSong} />
-              {isPaused ? (
-                <CirclePlayFill width={25} height={25} onClick={togglePlayPause} />
-              ) : (
-                <CirclePauseFill width={25} height={25} onClick={togglePlayPause} />
-              )}
-              <CircleChevronRightFill width={25} height={25} onClick={nextSong} />
-            </div>
-        </div>
+        <div
+          style={{ maxWidth: "100%", position: "relative" }}
+          onClick={() => setIsOpenFullPlayer(true)}
+        >
+          <ControlsReproductor  img={img}  />
         </div>
       )}
+
       {isOpenFullPlayer && (
         <ModalFullPlayer
           open={isOpenFullPlayer}
           close={() => setIsOpenFullPlayer(false)}
-          dataSong = {{img:img, name:infoSong}}
+          dataSong={{ img, name: infoSong }}
+          prevSong={prevSong}
+          nextSong={nextSong}
+          togglePlayPause={togglePlayPause}
+          ProgressBar={ProgressBar}
+          currentTime={currentTime}
+          duration={duration}
+          nameAlbum={nameAlbum}
+          imageAlbum={imageAlbum}
         />
       )}
     </div>

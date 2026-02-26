@@ -13,7 +13,8 @@ export async function getSongs() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Cantemos a Jehová (Reuniones)"
       }
       dataSongs.push(songData)
     });
@@ -37,7 +38,8 @@ export async function getAlbumCantadas() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Cantemos a Jehová (Cantadas)"
       }
       dataSongs.push(songData)
     });
@@ -60,7 +62,8 @@ export async function getAlbumOriginales() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Cantemos a Jehová (Originales)"
       }
       dataSongs.push(songData)
     });
@@ -84,7 +87,8 @@ export async function getAlbumCoroOrquesta() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Cantemos a Jehová (Coro y orquesta)"
       }
       dataSongs.push(songData)
     });
@@ -108,7 +112,8 @@ export async function conGozoAJehovaNiños() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Hazte amigo de Jehová (Cantemos juntos)"
       }
       dataSongs.push(songData)
     });
@@ -134,11 +139,12 @@ export async function conGozoAJehovaNiñosOriginales() {
         id: element.docid,
         title: element.title,
         file: element.file.url,
-        duration: element.duration
+        duration: element.duration,
+        nameAlbum: "Hazte amigo de Jehová (canciones originales)"
       }
       dataSongs.push(songData)
     });
-    console.log(dataSongs, "datasong")
+
 
     return dataSongs
   } catch (error) {
@@ -150,8 +156,8 @@ export async function conGozoAJehovaNiñosOriginales() {
 export async function getObrasTeatrales() {
 
   const pubCode = [
-    "iart","iaze","iaoh","iawx","iapv","iame","iajn","iacu",
-    "iaru","iaey","iath","iajj","iaeb","iada"
+    "iart", "iaze", "iaoh", "iawx", "iapv", "iame", "iajn", "iacu",
+    "iaru", "iaey", "iath", "iajj", "iaeb", "iada"
   ];
 
   const allSongs = [];
@@ -175,7 +181,8 @@ export async function getObrasTeatrales() {
           title: track.title,
           file: track.file.url,
           duration: track.duration,
-          img: `https://assetsnffrgf-a.akamaihd.net/assets/a/${pub}/univ/wpub/${pub}_univ_lg.jpg`
+          img: `https://assetsnffrgf-a.akamaihd.net/assets/a/${pub}/univ/wpub/${pub}_univ_lg.jpg`,
+          nameAlbum: "Obras teatrales en audio",
         });
       });
     }
