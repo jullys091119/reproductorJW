@@ -54,17 +54,22 @@ export function ModalFullPlayer({
           <Modal.Container size="full">
             <Modal.Dialog className={styles.container}>
               <div className={styles.containerAlbumImage}>
-                <div className={styles.cuadrado}></div>
-                <div className={styles.circle}>
-                  {album && (
-                    <Image
-                      src={album}
-                      width={500}
-                      height={500}
-                      className={styles.circleImage}
-                      alt="Album cover"
-                    />
-                  )}
+                <div className={styles.cuadrado}>
+                  <div className={styles.circle}>
+                    {album && (
+                      <Image
+                        src={album}
+                        width={500}
+                        height={500}
+                        className={styles.circleImage}
+                        alt="Album cover"
+                      >
+                      </Image>
+                    )}
+                    <div className={styles.circleBlack}>
+                       <div className={styles.circleWhite}></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

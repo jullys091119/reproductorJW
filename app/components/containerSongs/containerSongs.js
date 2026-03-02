@@ -5,6 +5,7 @@ import { AppContext } from "@/app/AppContext";
 import { Card } from "@heroui/react";
 import styles from "./containerSongs.module.css";
 import Image from "next/image";
+
 import {
   CirclePauseFill,
   CirclePlayFill,
@@ -16,12 +17,13 @@ import {
 import { MenuNav } from "../menuNav/menuNav";
 import { setLirycs } from "@/queries";
 import { ModalFullPlayer } from "../modalFullPlayer/ModalFullPlayer";
+import { ModalLyrics } from "../menuNav/modalLyrics/ModalLyrics";
 
 export function ContainerSongs({ data = [], img, resetKey }) {
   const audioRef = useRef(null);
   const indexRef = useRef(0);
 
-  const { setIdLirycs, isPaused, setIsPaused } = useContext(AppContext);
+  const { setIdLirycs, isPaused, setIsPaused,setOpenVideo, setVideo } = useContext(AppContext);
 
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
@@ -34,7 +36,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const [duration, setDuration] = useState(0);
   const [nameAlbum, setNameAlbum] = useState("")
   const [imageAlbum, setImageAlbum] = useState("")
-
+  const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     indexRef.current = index;
   }, [index]);
@@ -164,7 +166,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   );
 
   const ControlsReproductor = () => {
-    
+
     return (
 
       <div className={styles.progressbarContainer}>
@@ -224,6 +226,17 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     )
   };
 
+  const showLyrics = async (e) => {
+    e.stopPropagation()
+    setIsOpen(true)
+  };
+
+  const handleVideo  = (e, video) => {
+    e.stopPropagation()
+    setOpenVideo(true)
+    setVideo(video)
+  }
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -277,9 +290,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   return (
     <div>
       <MenuNav
-        video={<Video width={20} height={20} />}
-        lirycs={<FontCursor height={20} width={20} />}
         currentLyrics={currentLyrics}
+      />
+
+      <ModalLyrics
+        currentLyrics={currentLyrics}
+        isOpen={isOpen}
+        close={() => setIsOpen(false)}
+
       />
 
       <Card
@@ -288,14 +306,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
       >
         {data.map((item, i) => {
           const title =
-            item.title?.length > 30
-              ? `${item.title.slice(0, 30)}...`
+            item.title?.length > 25
+              ? `${item.title.slice(0, 25)}...`
               : item.title;
 
           const isSelected = selected === item.id;
           const timeText = formatTime(item.duration);
           const showImg = img[i]?.img || img;
-
+         
           return (
             <Card.Header key={`${item.id}-${item.title}`}>
               <div
@@ -316,7 +334,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
                     alt="img"
                   />
                   <Card.Title className={styles.colorTitle}>
-                    {title}
+                    <p>{title}</p>
+                    {
+                      isSelected &&
+                      <div className={styles.containerIcons}>
+                        <Video width={20} height={20} color="white" onClick={(e)=> handleVideo(e, item.video)} />
+                        <FontCursor height={20} width={20} color="white" onClick={(e) => showLyrics(e)} />
+                      </div>
+                    }
                   </Card.Title>
                 </div>
 
@@ -333,7 +358,6 @@ export function ContainerSongs({ data = [], img, resetKey }) {
             </Card.Header>
           );
         })}
-
         <audio
           ref={audioRef}
           preload="metadata"
@@ -344,10 +368,10 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
       {infoSong && (
         <div
-          style={{ maxWidth: "100%", position: "relative" }}
+          style={{ maxWidth: "100%" }}
           onClick={() => setIsOpenFullPlayer(true)}
         >
-          <ControlsReproductor  img={img}  />
+          <ControlsReproductor img={img} />
         </div>
       )}
 
