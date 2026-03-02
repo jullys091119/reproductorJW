@@ -1,3 +1,5 @@
+
+
 export async function getSongs() {
   try {
     const res = await fetch("https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=sjjm&fileformat=MP3&langwritten=S&alllangs=0");
@@ -5,6 +7,8 @@ export async function getSongs() {
 
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
+    const videos  =  await getVideosSongs(normalSongs.length)
+    console.log(videos)
     const dataSongs = []
     normalSongs.forEach((element, i) => {
       /*  console.log(element.title) */
@@ -14,7 +18,8 @@ export async function getSongs() {
         title: element.title,
         file: element.file.url,
         duration: element.duration,
-        nameAlbum: "Cantemos a Jehová (Reuniones)"
+        nameAlbum: "Cantemos a Jehová (Reuniones)",
+        video: videos[i]?.url
       }
       dataSongs.push(songData)
     });
@@ -220,3 +225,25 @@ export async function setLirycs() {
     return {};
   }
 }
+
+
+export async function getVideosSongs(data) {
+  console.log(data, "data")
+  try {
+    const dataVideo =  []
+    for (let i = 1; i < data; i++) {
+      const res = await fetch(`https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=sjjm&fileformat=m4v%2Cmp4%2C3gp%2Cmp3&alllangs=0&track=${i}&langwritten=S&txtCMSLang=S`)
+      const urlVideo = await res.json()
+      const video = {
+        url: urlVideo.files.S.MP4[3].file?.url,
+        title: urlVideo.files.S.MP4[3].title,
+        img: urlVideo.files.S.MP4[3].trackImage.url,
+      }
+      dataVideo.push(video)
+    }    
+    return dataVideo
+  } catch (error) {
+    console.log(error)
+  }
+}
+
