@@ -23,7 +23,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const audioRef = useRef(null);
   const indexRef = useRef(0);
 
-  const { setIdLirycs, isPaused, setIsPaused,setOpenVideo, setVideo } = useContext(AppContext);
+
+  const { setIdLirycs, isPaused, setIsPaused,setOpenVideo, setVideo, videoPause} = useContext(AppContext);
 
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
@@ -49,6 +50,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   const loadAndPlay = useCallback(async (file) => {
     const audio = audioRef.current;
+    
     if (!audio || !file) return;
 
     audio.src = file;
@@ -68,6 +70,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   };
 
   const playSongByIndex = useCallback(async (i) => {
+   
     if (!data?.length) return;
 
     const song = data[i];
@@ -79,7 +82,14 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setNameAlbum(song.nameAlbum)
     const showImg = img[i]?.img || img;
     setImageAlbum(showImg)
-
+  
+    const video =  videoPause.current
+    console.log(video)
+    if(video) {
+      console.log(video)
+      video.pause()
+      setOpenVideo(false)
+    }
     const title =
       song.title.length > 25
         ? `${song.title.slice(0, 25)}...`
@@ -88,7 +98,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setInfoSong(title);
 
     await loadAndPlay(song.file);
-  }, [data, loadAndPlay]);
+  }, [data, loadAndPlay, videoPause]);
 
   const nextSong = useCallback(() => {
     if (!data?.length) return;
@@ -232,6 +242,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   };
 
   const handleVideo  = (e, video) => {
+     audioRef.current.pause()
     e.stopPropagation()
     setOpenVideo(true)
     setVideo(video)
