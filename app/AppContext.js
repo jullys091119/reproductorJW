@@ -10,6 +10,7 @@ export const AppProvider = ({ children }) => {
     const [openVideo, setOpenVideo] = useState(false)
     const [video, setVideo] = useState("")
     const [videoPause, setVideoPause] = useState({})
+    const [endVideo, setEndVideo] = useState(false)
 
     return (
         <AppContext.Provider value={{
@@ -19,7 +20,8 @@ export const AppProvider = ({ children }) => {
             isPaused, setIsPaused,
             openVideo, setOpenVideo,
             video, setVideo,
-            videoPause, setVideoPause
+            videoPause, setVideoPause,
+            endVideo, setEndVideo
         }}>
             {children}
         </AppContext.Provider>

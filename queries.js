@@ -7,7 +7,7 @@ export async function getSongs() {
 
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
-    const videos  =  await getVideosSongs(normalSongs.length)
+    const videos = await getVideosSongs(normalSongs.length)
     console.log(videos)
     const dataSongs = []
     normalSongs.forEach((element, i) => {
@@ -111,18 +111,22 @@ export async function conGozoAJehovaNiños() {
     const data = await (await res).json()
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
+  
+    const video = await getVideosAmigoDeJehova()
+    console.log(video, "desde album niños")
     const dataSongs = []
-    normalSongs.forEach(element => {
+    normalSongs.forEach((element,i) => {
       const songData = {
         id: element.docid,
         title: element.title,
         file: element.file.url,
         duration: element.duration,
-        nameAlbum: "Hazte amigo de Jehová (Cantemos juntos)"
+        nameAlbum: "Hazte amigo de Jehová (Cantemos juntos)",
+        video: video[i].url
       }
       dataSongs.push(songData)
     });
-
+       console.log(dataSongs, "dtasong")
     return dataSongs
 
   } catch (error) {
@@ -229,7 +233,7 @@ export async function setLirycs() {
 
 export async function getVideosSongs(data) {
   try {
-    const dataVideo =  []
+    const dataVideo = []
     for (let i = 1; i < data; i++) {
       const res = await fetch(`https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=sjjm&fileformat=m4v%2Cmp4%2C3gp%2Cmp3&alllangs=0&track=${i}&langwritten=S&txtCMSLang=S`)
       const urlVideo = await res.json()
@@ -239,10 +243,28 @@ export async function getVideosSongs(data) {
         img: urlVideo.files.S.MP4[3].trackImage.url,
       }
       dataVideo.push(video)
-    }    
+    }
     return dataVideo
   } catch (error) {
     console.log(error)
   }
 }
 
+
+export async function getVideosAmigoDeJehova() {
+  try {
+    const dataVideo = []
+    const res = await fetch(`https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pksjj&fileformat=MP3%2CAAC%2CM4V%2CMP4%2C3GP&alllangs=0&langwritten=S&txtCMSLang=S`)
+    const urlVideo = await res.json()
+    urlVideo.files.S.MP4.forEach(element => {
+      const video =  {url: element.file.url}
+      dataVideo.push(video)
+    });
+  
+    console.log(dataVideo,"DATAVCIDEO")
+
+    return dataVideo
+  } catch (error) {
+    console.log(error)
+  }
+}
