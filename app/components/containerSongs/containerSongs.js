@@ -68,14 +68,10 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     const lyrics = await setLirycs(idLyrics);
     setCurrentLyrics(Object.values(lyrics).filter(l => l.id === idLyrics));
   };
-
   const playSongByIndex = useCallback(async (i) => {
-   
     if (!data?.length) return;
-
     const song = data[i];
     if (!song?.file) return;
-
     setIndex(i);
     setSelected(song.id);
     setLyrics(song.idLyrics);
@@ -84,9 +80,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setImageAlbum(showImg)
   
     const video =  videoPause.current
-    console.log(video)
     if(video) {
-      console.log(video)
       video.pause()
       setOpenVideo(false)
     }

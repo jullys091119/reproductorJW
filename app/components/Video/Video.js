@@ -1,24 +1,27 @@
 "use client"
-import { useContext, useEffect, useRef } from "react"
+import { useContext, useEffect } from "react"
 import { AppContext } from "@/app/AppContext"
-
-
 export default function VideoSongs() {
-    const { video,setVideoPause, videoPause } = useContext(AppContext)
-    const videoRef = useRef(null)
+    const { video,setEndVideo, setOpenVideo } = useContext(AppContext)
+
 
     useEffect(() => {
-     setVideoPause(videoRef)
-     console.log(videoPause?.current)
-    }, [video, videoPause])
+
+    }, [video])
+
+    const handleVideoEnded = () => {
+        setEndVideo(true);
+        setOpenVideo(false)
+    };
     return (
         <video
-           
+            width="420"
+            height="440"
             controls
             preload="auto"
             autoPlay
-            ref={videoRef}
-            style={{borderRadius: "20px"}}
+            onEnded={handleVideoEnded}
+            style={{borderRadius: "15px"}}
         >
             <source src={video} type="video/mp4" />
         </video>

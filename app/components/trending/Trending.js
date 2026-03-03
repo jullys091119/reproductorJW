@@ -6,18 +6,19 @@ import CardTrendingChild from "./cardTrendingChild/cardTrendingChild"
 import Video from "../Video/Video"
 
 
-
 export function Trending() {
-  const { openVideo } = useContext(AppContext)
+  const { openVideo, endVideo } = useContext(AppContext)
+
   return (
     <div>
       {
-        openVideo ? (<Video />) : (
+        openVideo ? (
+          <Video />
+        ) : (
           <>
             <CardTrending />
             <CardTrendingChild />
           </>
-
         )
       }
     </div>
