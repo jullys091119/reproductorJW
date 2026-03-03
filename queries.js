@@ -228,7 +228,6 @@ export async function setLirycs() {
 
 
 export async function getVideosSongs(data) {
-  console.log(data, "data")
   try {
     const dataVideo =  []
     for (let i = 1; i < data; i++) {

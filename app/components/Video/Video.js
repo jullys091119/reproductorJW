@@ -1,13 +1,16 @@
 "use client"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { AppContext } from "@/app/AppContext"
+
+
 export default function VideoSongs() {
-    const { video, setVideo } = useContext(AppContext)
+    const { video,setVideoPause, videoPause } = useContext(AppContext)
+    const videoRef = useRef(null)
 
-    console.log(video, "este es el video")
     useEffect(() => {
-
-    }, [video])
+     setVideoPause(videoRef)
+     console.log(videoPause?.current)
+    }, [video, videoPause])
     return (
         <video
             width="420"
@@ -15,6 +18,8 @@ export default function VideoSongs() {
             controls
             preload="auto"
             autoPlay
+            ref={videoRef}
+            style={{borderRadius: "20px"}}
         >
             <source src={video} type="video/mp4" />
         </video>

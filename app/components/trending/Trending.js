@@ -9,7 +9,6 @@ import Video from "../Video/Video"
 
 export function Trending() {
   const { openVideo } = useContext(AppContext)
-
   return (
     <div>
       {
