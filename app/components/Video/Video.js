@@ -13,8 +13,7 @@ export default function VideoSongs() {
     }, [video, videoPause])
     return (
         <video
-            width="420"
-            height="440"
+           
             controls
             preload="auto"
             autoPlay

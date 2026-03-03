@@ -27,7 +27,7 @@ body {
 }
 
 .container {
-  height: 96vh;
+  height: 100vh;
   padding: 10px;
   background-color: #060508  !important;
   color: rgb(238, 231, 231);
