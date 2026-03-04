@@ -1,5 +1,11 @@
 
 
+
+
+
+import { Vibur } from "next/font/google";
+
+
 export async function getSongs() {
   try {
     const res = await fetch("https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=sjjm&fileformat=MP3&langwritten=S&alllangs=0");
@@ -59,16 +65,19 @@ export async function getAlbumOriginales() {
   try {
     const res = fetch("https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=osg&fileformat=MP3%2CAAC&alllangs=0&langwritten=S&txtCMSLang=S");
     const data = await (await res).json()
+    const video = await getVideosOriginales()
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
     const dataSongs = []
-    normalSongs.forEach(element => {
+    normalSongs.forEach((element,i) => {
       const songData = {
         id: element.docid,
         title: element.title,
         file: element.file.url,
         duration: element.duration,
-        nameAlbum: "Cantemos a Jehová (Originales)"
+        nameAlbum: "Cantemos a Jehová (Originales)",
+        video: video[i].url
+    
       }
       dataSongs.push(songData)
     });
@@ -76,6 +85,49 @@ export async function getAlbumOriginales() {
 
   } catch (error) {
     console.log(error, "error obteniendo la consulta del album originales")
+  }
+}
+
+export async function getVideosOriginales () {
+  try {
+     const res = await fetch(
+      `https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=osg&fileformat=MP3%2CAAC%2CM4V%2CMP4%2C3GP&alllangs=0&langwritten=S&txtCMSLang=S`
+    );
+     const urlVideo = await res.json();
+
+    const videos = urlVideo.files?.S?.MP4 || [];
+
+    const videosByTrack = new Map();
+
+    videos.forEach(video => {
+      if (!videosByTrack.has(video.track)) {
+        videosByTrack.set(video.track, []);
+      }
+      videosByTrack.get(video.track).push(video);
+    });
+
+    const dataVideo = [];
+
+    videosByTrack.forEach((videoList) => {
+      const preferred =
+        videoList.find(v => v.label === "720p") ||
+        videoList.sort(
+          (a, b) => parseInt(b.label) - parseInt(a.label)
+        )[0];
+
+      if (preferred) {
+        dataVideo.push({
+          url: preferred.file.url,
+          title: preferred.title,
+          track: preferred.track,
+        });
+      }
+    });
+
+    return dataVideo;
+    
+  } catch (error) {
+    
   }
 }
 
@@ -107,33 +159,45 @@ export async function getAlbumCoroOrquesta() {
 
 export async function conGozoAJehovaNiños() {
   try {
-    const res = fetch("https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pksjj&fileformat=MP3&alllangs=0&langwritten=S&txtCMSLang=S");
-    const data = await (await res).json()
-    const songs = Object.values(data.files.S.MP3)
-    const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
+
+    const res = await fetch(
+      "https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pksjj&fileformat=MP3&alllangs=0&langwritten=S&txtCMSLang=S"
+    );
+
+    const data = await res.json();
+
+    const songs = Object.values(data.files.S.MP3);
+
   
-    const video = await getVideosAmigoDeJehova()
-    console.log(video, "desde album niños")
-    const dataSongs = []
-    normalSongs.forEach((element,i) => {
-      const songData = {
+    const normalSongs = songs.filter(
+      (song) => !/audiodescripciones/i.test(song.title)
+    );
+
+    const video = await getVideosAmigoDeJehova();
+
+    const videoMap = new Map(
+      video.map((v) => [v.track, v])
+    );
+    const dataSongs = normalSongs.map((element) => {
+      const videoMatch = videoMap.get(element.track);
+
+      return {
         id: element.docid,
         title: element.title,
         file: element.file.url,
         duration: element.duration,
         nameAlbum: "Hazte amigo de Jehová (Cantemos juntos)",
-        video: video[i].url
-      }
-      dataSongs.push(songData)
+        video: videoMatch?.url || null,
+      };
     });
-       console.log(dataSongs, "dtasong")
-    return dataSongs
+
+    return dataSongs;
 
   } catch (error) {
-    console.log(error, "error obteniendo la consulta del album originales")
+    console.log(error, "error obteniendo la consulta del album originales");
+    return [];
   }
 }
-
 
 
 export async function conGozoAJehovaNiñosOriginales() {
@@ -142,14 +206,16 @@ export async function conGozoAJehovaNiñosOriginales() {
     const data = await (await res).json()
     const songs = Object.values(data.files.S.MP3)
     const normalSongs = songs.filter(song => !/audiodescripciones/i.test(song.title))
+    const video =  await getVideosAmigoJehovaOriginales()
     const dataSongs = []
-    normalSongs.forEach(element => {
+    normalSongs.forEach((element,i) => {
       const songData = {
         id: element.docid,
         title: element.title,
         file: element.file.url,
         duration: element.duration,
-        nameAlbum: "Hazte amigo de Jehová (canciones originales)"
+        nameAlbum: "Hazte amigo de Jehová (canciones originales)",
+        video: video[i].url
       }
       dataSongs.push(songData)
     });
@@ -160,6 +226,52 @@ export async function conGozoAJehovaNiñosOriginales() {
     console.log(error, "error obteniendo la consulta del album originales")
   }
 }
+
+
+
+export async function getVideosAmigoJehovaOriginales () {
+  try {
+     const res = await fetch(
+      `https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pkon&fileformat=MP3%2CAAC%2CM4V%2CMP4%2C3GP&alllangs=0&langwritten=S&txtCMSLang=S`
+    );
+     const urlVideo = await res.json();
+
+    const videos = urlVideo.files?.S?.MP4 || [];
+
+    const videosByTrack = new Map();
+
+    videos.forEach(video => {
+      if (!videosByTrack.has(video.track)) {
+        videosByTrack.set(video.track, []);
+      }
+      videosByTrack.get(video.track).push(video);
+    });
+
+    const dataVideo = [];
+
+    videosByTrack.forEach((videoList) => {
+      const preferred =
+        videoList.find(v => v.label === "720p") ||
+        videoList.sort(
+          (a, b) => parseInt(b.label) - parseInt(a.label)
+        )[0];
+
+      if (preferred) {
+        dataVideo.push({
+          url: preferred.file.url,
+          title: preferred.title,
+          track: preferred.track,
+        });
+      }
+    });
+
+    return dataVideo;
+    
+  } catch (error) {
+    
+  }
+}
+
 
 
 export async function getObrasTeatrales() {
@@ -252,19 +364,47 @@ export async function getVideosSongs(data) {
 
 
 export async function getVideosAmigoDeJehova() {
-  try {
-    const dataVideo = []
-    const res = await fetch(`https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pksjj&fileformat=MP3%2CAAC%2CM4V%2CMP4%2C3GP&alllangs=0&langwritten=S&txtCMSLang=S`)
-    const urlVideo = await res.json()
-    urlVideo.files.S.MP4.forEach(element => {
-      const video =  {url: element.file.url}
-      dataVideo.push(video)
-    });
-  
-    console.log(dataVideo,"DATAVCIDEO")
 
-    return dataVideo
+  try {
+    const res = await fetch(
+      `https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?output=json&pub=pksjj&fileformat=MP3%2CAAC%2CM4V%2CMP4%2C3GP&alllangs=0&langwritten=S&txtCMSLang=S`
+    );
+
+    const urlVideo = await res.json();
+
+    const videos = urlVideo.files?.S?.MP4 || [];
+
+    const videosByTrack = new Map();
+
+    videos.forEach(video => {
+      if (!videosByTrack.has(video.track)) {
+        videosByTrack.set(video.track, []);
+      }
+      videosByTrack.get(video.track).push(video);
+    });
+
+    const dataVideo = [];
+
+    videosByTrack.forEach((videoList) => {
+      const preferred =
+        videoList.find(v => v.label === "720p") ||
+        videoList.sort(
+          (a, b) => parseInt(b.label) - parseInt(a.label)
+        )[0];
+
+      if (preferred) {
+        dataVideo.push({
+          url: preferred.file.url,
+          title: preferred.title,
+          track: preferred.track,
+        });
+      }
+    });
+
+    return dataVideo;
+
   } catch (error) {
-    console.log(error)
+    console.log("Error obteniendo videos:", error);
+    return [];
   }
 }

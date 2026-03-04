@@ -1,17 +1,14 @@
 "use client"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { AppContext } from "@/app/AppContext"
-export default function VideoSongs() {
+
+export default function VideoSongs({nextSong}) {
     const { video,setEndVideo, setOpenVideo } = useContext(AppContext)
-
-
-    useEffect(() => {
-
-    }, [video])
 
     const handleVideoEnded = () => {
         setEndVideo(true);
         setOpenVideo(false)
+        nextSong()
     };
     return (
         <video
