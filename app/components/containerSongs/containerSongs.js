@@ -24,7 +24,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
   const indexRef = useRef(0);
 
 
-  const { setIdLirycs, isPaused, setIsPaused,setOpenVideo, setVideo, videoPause} = useContext(AppContext);
+  const { setIdLirycs, isPaused, setIsPaused, setOpenVideo, setVideo, videoPause, setNextSong } = useContext(AppContext);
 
   const [selected, setSelected] = useState(null);
   const [index, setIndex] = useState(0);
@@ -50,7 +50,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
 
   const loadAndPlay = useCallback(async (file) => {
     const audio = audioRef.current;
-    
+
     if (!audio || !file) return;
 
     audio.src = file;
@@ -78,12 +78,9 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setNameAlbum(song.nameAlbum)
     const showImg = img[i]?.img || img;
     setImageAlbum(showImg)
-  
-    const video =  videoPause.current
-    if(video) {
-      video.pause()
-      setOpenVideo(false)
-    }
+
+    setOpenVideo(false)
+
     const title =
       song.title.length > 25
         ? `${song.title.slice(0, 25)}...`
@@ -235,8 +232,8 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setIsOpen(true)
   };
 
-  const handleVideo  = (e, video) => {
-     audioRef.current.pause()
+  const handleVideo = (e, video) => {
+    audioRef.current.pause()
     e.stopPropagation()
     setOpenVideo(true)
     setVideo(video)
@@ -292,6 +289,10 @@ export function ContainerSongs({ data = [], img, resetKey }) {
     setProgress(0);
   }, [resetKey, setIsPaused]);
 
+  useEffect(() => {
+    setNextSong(() => nextSong);
+  }, [nextSong]);
+
   return (
     <div>
       <MenuNav
@@ -310,6 +311,15 @@ export function ContainerSongs({ data = [], img, resetKey }) {
         style={{ display: data.length > 0 ? "flex" : "none" }}
       >
         {data.map((item, i) => {
+
+          const albumsWithoutVideo = [
+            "Obras teatrales en audio",
+            "Cantemos a Jehová (Cantadas)",
+            "Cantemos a Jehová (Coro y orquesta)"
+          ];
+
+          const isVisibleVideo = !albumsWithoutVideo.includes(item.nameAlbum);
+
           const title =
             item.title?.length > 25
               ? `${item.title.slice(0, 25)}...`
@@ -318,7 +328,7 @@ export function ContainerSongs({ data = [], img, resetKey }) {
           const isSelected = selected === item.id;
           const timeText = formatTime(item.duration);
           const showImg = img[i]?.img || img;
-         
+
           return (
             <Card.Header key={`${item.id}-${item.title}`}>
               <div
@@ -341,11 +351,11 @@ export function ContainerSongs({ data = [], img, resetKey }) {
                   <Card.Title className={styles.colorTitle}>
                     <p>{title}</p>
                     {
-                      isSelected &&
+                      isSelected  && isVisibleVideo && (
                       <div className={styles.containerIcons}>
-                        <Video width={20} height={20} color="white" onClick={(e)=> handleVideo(e, item.video)} />
+                        <Video width={20} height={20} color="white" onClick={(e) => handleVideo(e, item.video)} />
                         <FontCursor height={20} width={20} color="white" onClick={(e) => showLyrics(e)} />
-                      </div>
+                      </div>)
                     }
                   </Card.Title>
                 </div>
